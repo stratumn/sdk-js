@@ -1,5 +1,8 @@
 import { Link } from '@stratumn/js-chainscript';
 
+type LinkHash = Uint8Array;
+type TODO = any;
+
 /**
  * Config interface used to configure the Sdk.
  */
@@ -25,119 +28,205 @@ declare interface Config {
    * The secret used to authenticate the input.
    * Can be a signing key or a username + password.
    */
-  secret: any;
+  secret:  // the username + password case
+    | { email: string; password: string }
+    // the password protected signing key case
+    | { publicKey: string; password: string }
+    // the private key directly case
+    | { privateKey: string };
 }
 
 /**
  * Interface used as argument to create a new trace.
  * User must provide the form id to use and the form data.
  */
-declare interface NewTraceInput {
+declare interface NewTraceInput<TLink = any> {
   formId: string;
-  data: any;
+  data: TLink;
 }
 
 /**
  * Interface used as argument to append a new link to a trace.
- * User must provide the trace id, form id, form data and previous link hash.
- * The key difference with the NewTraceInput is that the trace id and the
- * previous link hash must be provided.
+ * User must provide the trace id, form id and form data.
+ * User can optionally provide the previous link hash, if not it will be fetched
+ * from the API first.
+ * The key difference with the NewTraceInput is that the trace id must be provided.
  */
-declare interface AppendTraceInput {
+declare interface AppendLinkInput<TLink = any> {
   traceId: string;
   formId: string;
-  data: any;
-  prevLinkHash: Uint8Array;
+  data: TLink;
+  prevLinkHash?: LinkHash;
 }
 
 /**
  * Interface used as argument to transfer (push) a trace.
- * User must provide the trace id, recipient id and previous link hash.
+ * User must provide the trace id.
+ * User can optionally provide the previous link hash, if not it will be fetched
+ * from the API first.
  * User can optionally provide some data to be set in the link.
+ * The recipient id is optional if it is a pull transfer, but mandatory in the
+ * case of a push transfer.
  */
-declare interface TransferRequestInput {
+declare interface TransferRequestInput<TLink = any> {
   traceId: string;
-  recipient: string;
-  data?: any;
-  prevLinkHash: Uint8Array;
+  recipient?: string;
+  data?: TLink;
+  prevLinkHash?: LinkHash;
 }
 
 /**
  * Interface used as argument to respond to a transfer.
- * User must provide the trace id and previous link hash.
+ * User must provide the trace id.
+ * User can optionally provide the previous link hash, if not it will be fetched
+ * from the API first.
  * User can optionally provide some data to be set in the link.
  */
-declare interface TransferResponseInput {
+declare interface TransferResponseInput<TLink = any> {
   traceId: string;
-  data?: any;
-  prevLinkHash: Uint8Array;
+  data?: TLink;
+  prevLinkHash?: LinkHash;
 }
 
 /**
- * TraceLink extends a CS.Link with some helper methods like
- * createdBy, createdAt etc..
+ * Interface used as argument to get the trace state.
+ * User must provide the trace id.
+ */
+declare interface GetTraceStateInput {
+  traceId: string;
+}
+
+/**
+ * Interface used as argument to get the trace details.
+ * User must provide the trace id.
+ * For pagination, user can provide either:
+ * - first
+ * - first and after
+ * - last
+ * - last and before
+ */
+declare interface GetTraceDetailsInput {
+  traceId: string;
+  first?: number;
+  after?: string;
+  last?: number;
+  before?: string;
+}
+
+/**
+ * TraceLink extends a CS.Link with some helper methods:
+ * - traceId
+ * - createdBy
+ * - createdAt
+ * - owner
+ * - groupId
+ * - formId
  */
 declare interface TraceLink extends Link {
-  // add trace like methods here, for ex:
-  createdBy(): string;
+  traceId(): string;
+  createdBy(): TODO;
   createdAt(): Date;
-  // ...
+  owner(): TODO;
+  groupId(): string;
+  formId(): string;
 }
 
 /**
- * The state of trace is composed of some abstract data
- * validated against a schema and the head of the the trace.
+ * The state of trace is composed of:
+ * - the trace id
+ * - the link hash of the head of the trace
+ * - the date at which it was last updated
+ * - the person who last updated it
+ * - some abstract data validated against a predefined schema
  */
-declare interface TraceState {
-  data: any;
-  head: TraceLink;
+declare interface TraceState<TState = any> {
+  traceId: string;
+  headLinkHash: LinkHash;
+  updatedAt: Date;
+  updatedBy: TODO;
+  data: TState;
 }
 
 /**
- * The Stratumn Sdk
+ * The details of a trace contains:
+ * - the requested links
+ * - the total count of links in the trace
+ * - some pagination information
  */
-export declare class Sdk {
+declare interface TraceDetails {
+  links: TraceLink[];
+  totalCount: number;
+  info: {
+    hasNext: boolean;
+    hasPrevious: boolean;
+    startCursor?: string;
+    endCursor?: string;
+  };
+}
+
+/**
+ * The Stratumn Sdk.
+ * One Sdk per workflow.
+ * One State schema per workflow hence the possibility
+ * to specify the shape of the state at the Sdk level via generics.
+ */
+export declare class Sdk<TState = any> {
   constructor(config: Config);
 
   /**
    * Creates a new trace.
    * @returns the TraceState
    */
-  newTrace(input: NewTraceInput): Promise<TraceState>;
+  newTrace<TLink>(input: NewTraceInput<TLink>): Promise<TraceState<TState>>;
   /**
    * Appends a new link to a trace.
    * @returns the TraceState
    */
-  appendTrace(input: AppendTraceInput): Promise<TraceState>;
+  appendLink<TLink>(input: AppendLinkInput<TLink>): Promise<TraceState<TState>>;
   /**
-   * Appends a new link to a trace.
+   * Push a trace to a recipient group.
    * @returns the TraceState
    */
-  transferTrace(input: TransferRequestInput): Promise<TraceState>;
+  pushTrace<TLink>(
+    input: TransferRequestInput<TLink>
+  ): Promise<TraceState<TState>>;
+  /**
+   * Pull a trace from current owner.
+   * @returns the TraceState
+   */
+  pullTrace<TLink>(
+    input: TransferRequestInput<TLink>
+  ): Promise<TraceState<TState>>;
   /**
    * Accepts the transfer of ownership of a trace.
    * @returns the TraceState
    */
-  acceptTransfer(input: TransferResponseInput): Promise<TraceState>;
+  acceptTransfer<TLink>(
+    input: TransferResponseInput<TLink>
+  ): Promise<TraceState<TState>>;
   /**
    * Rejects the transfer of ownership of a trace.
    * @returns the TraceState
    */
-  rejectTransfer(input: TransferResponseInput): Promise<TraceState>;
+  rejectTransfer<TLink>(
+    input: TransferResponseInput<TLink>
+  ): Promise<TraceState<TState>>;
   /**
    * Cancels the transfer of ownership of a trace.
    * @returns the TraceState
    */
-  cancelTransfer(input: TransferResponseInput): Promise<TraceState>;
+  cancelTransfer<TLink>(
+    input: TransferResponseInput<TLink>
+  ): Promise<TraceState<TState>>;
 
   /**
    * Returns the state of a given trace.
    * @returns the TraceState
    */
-  getTraceState(traceId: string): Promise<TraceState>;
+  getTraceState(input: GetTraceStateInput): Promise<TraceState<TState>>;
   /**
    * Returns the details of a given trace (all the links).
    * @returns the TraceState
    */
-  getTraceDetails(traceId: string): Promise<TraceLink[]>;
+  getTraceDetails(input: GetTraceDetailsInput): Promise<TraceDetails>;
 }
