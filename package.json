@@ -1,0 +1,57 @@
+{
+  "name": "@stratumn/sdk-js",
+  "version": "0.0.1",
+  "description": "Stratumn Javascript Sdk",
+  "repository": "git@github.com:stratumn/sdk-js.git",
+  "author": "Stratumn Team",
+  "private": false,
+  "license": "Apache-2.0",
+  "main": "lib/index.js",
+  "files": [
+    "/lib"
+  ],
+  "typings": "lib/index.d.ts",
+  "scripts": {
+    "clean": "rimraf lib",
+    "prebuild": "yarn clean",
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "lint": "tslint --project \"./tsconfig.json\"",
+    "release": "semantic-release"
+  },
+  "dependencies": {
+    "gql-tag": "^1.0.1",
+    "graphql-request": "^1.8.2"
+  },
+  "devDependencies": {
+    "@semantic-release/git": "^7.0.5",
+    "@types/jest": "^23.3.10",
+    "conventional-changelog-eslint": "^3.0.1",
+    "jest": "^24.1.0",
+    "semantic-release": "^15.12.5",
+    "ts-jest": "^24.0.0",
+    "tslint": "^5.12.1",
+    "tslint-config-airbnb": "^5.11.1",
+    "typescript": "^3.3.3",
+    "validate-commit": "^3.4.0"
+  },
+  "release": {
+    "branch": "master",
+    "preset": "eslint",
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/npm",
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "package.json"
+          ],
+          "message": "${nextRelease.version}"
+        }
+      ],
+      "@semantic-release/github"
+    ]
+  }
+}
