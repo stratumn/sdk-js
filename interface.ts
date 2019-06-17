@@ -60,17 +60,28 @@ declare interface AppendLinkInput<TLink = any> {
 }
 
 /**
- * Interface used as argument to transfer (push) a trace.
+ * Interface used as argument to push a trace.
+ * User must provide the trace id and the recipient id.
+ * User can optionally provide the previous link hash, if not it will be fetched
+ * from the API first.
+ * User can optionally provide some data to be set in the link.
+ */
+declare interface PushTransferInput<TLink = any> {
+  traceId: string;
+  recipient: string;
+  data?: TLink;
+  prevLinkHash?: LinkHash;
+}
+
+/**
+ * Interface used as argument to pull a trace.
  * User must provide the trace id.
  * User can optionally provide the previous link hash, if not it will be fetched
  * from the API first.
  * User can optionally provide some data to be set in the link.
- * The recipient id is optional if it is a pull transfer, but mandatory in the
- * case of a push transfer.
  */
-declare interface TransferRequestInput<TLink = any> {
+declare interface PullTransferInput<TLink = any> {
   traceId: string;
-  recipient?: string;
   data?: TLink;
   prevLinkHash?: LinkHash;
 }
@@ -188,14 +199,14 @@ export declare class Sdk<TState = any> {
    * @returns the TraceState
    */
   pushTrace<TLink>(
-    input: TransferRequestInput<TLink>
+    input: PushTransferInput<TLink>
   ): Promise<TraceState<TState>>;
   /**
    * Pull a trace from current owner.
    * @returns the TraceState
    */
   pullTrace<TLink>(
-    input: TransferRequestInput<TLink>
+    input: PullTransferInput<TLink>
   ): Promise<TraceState<TState>>;
   /**
    * Accepts the transfer of ownership of a trace.
