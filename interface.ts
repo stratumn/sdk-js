@@ -16,10 +16,10 @@ declare interface Config {
   endpoints?:
     | EnvTag
     | {
-        trace?: string;
-        account?: string;
-        media?: string;
-      };
+      trace?: string;
+      account?: string;
+      media?: string;
+    };
   /**
    * The workflow id (instantiate one sdk per workflow)
    */
