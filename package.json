@@ -16,7 +16,8 @@
     "prebuild": "yarn clean",
     "build": "tsc",
     "build:watch": "tsc -w",
-    "test": "jest",
+    "test": "jest --watch --runInBand",
+    "test:ci": "jest",
     "lint": "tslint --project \"./tsconfig.json\"",
     "release": "semantic-release"
   },

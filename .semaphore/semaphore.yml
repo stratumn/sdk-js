@@ -1,0 +1,44 @@
+version: v1.0
+name: Stratumn javascript SDK  Pipeline
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+execution_time_limit:
+  minutes: 15
+
+blocks:
+  - name: Install dependencies
+    task:
+      prologue:
+        commands:
+          - checkout
+      jobs:
+        - name: NPM dependencies
+          commands:
+            - KEY=node-modules-$(checksum yarn.lock)
+            - cache restore $KEY
+            - cache has_key $KEY || yarn --frozen-lockfile
+            - cache store $KEY node_modules
+  - name: Test & Build
+    task:
+      prologue:
+        commands:
+          - checkout
+          - cache restore node-modules-$(checksum yarn.lock)
+      jobs:
+        - name: Lint
+          commands:
+            - yarn lint
+        - name: Test
+          commands:
+            - yarn test:ci
+        - name: Build
+          commands:
+            - KEY=lib-${SEMAPHORE_GIT_SHA}
+            - cache has_key $KEY || yarn build
+            - cache store $KEY lib
+
+promotions:
+  - name: Publish to npm registry
+    pipeline_file: npm-publish.yml
