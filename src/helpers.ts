@@ -7,6 +7,11 @@ import { sig, utils } from '@stratumn/js-crypto';
 const SERVICES: Service[] = ['account', 'media', 'trace'];
 
 /**
+ * An array of Stratumn environments
+ */
+const ENVS: EnvTag[] = ['staging', 'demo', 'release'];
+
+/**
  * Generates the api url of the service for a given environment
  *
  * @param env the environment tag
@@ -26,10 +31,19 @@ const makeApiUrl = (env: EnvTag, service: Service) => {
  */
 export const extractApiUrls = (endpoints?: EnvTag | Endpoints) => {
   if (typeof endpoints === 'object') {
+    const { account, media, trace } = endpoints;
+    if (!account || !trace || !media) {
+      throw new Error('The provided endpoints argument is not valid.');
+    }
     return endpoints;
   }
   let env: EnvTag = 'release';
   if (typeof endpoints === 'string') {
+    if (!ENVS.includes(endpoints as EnvTag)) {
+      throw new Error(
+        `The provided tag is invalid. Must be one of ${ENVS.join(' | ')}`
+      );
+    }
     env = endpoints;
   }
   const [account, media, trace] = SERVICES.map(svc => makeApiUrl(env, svc));

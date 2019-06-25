@@ -142,9 +142,17 @@ describe('Client', () => {
    * and the auth token to use
    */
   describe('fetch options', () => {
-    const fetchOptions: FetchOptions = {
+    const fetchOptionsWithBoth: FetchOptions = {
       skipAuth: true,
       authToken: 'of the token'
+    };
+
+    const fetchOptionsWithToken: FetchOptions = {
+      authToken: 'of the token'
+    };
+
+    const fetchOptionsWithSkip: FetchOptions = {
+      skipAuth: true
     };
 
     let client: Client;
@@ -160,15 +168,40 @@ describe('Client', () => {
     it.each([
       [
         'method get',
-        () => client.get('account', 'route', undefined, fetchOptions)
+        () => client.get('account', 'route', undefined, fetchOptionsWithToken),
+        'Bearer of the token'
       ],
-      ['method post', () => client.post('account', 'route', {}, fetchOptions)]
-    ])('%s', async (_name, func) => {
+      [
+        'method post',
+        () => client.post('account', 'route', {}, fetchOptionsWithToken),
+        'Bearer of the token'
+      ],
+      [
+        'method get',
+        () => client.get('account', 'route', undefined, fetchOptionsWithSkip),
+        ''
+      ],
+      [
+        'method post',
+        () => client.post('account', 'route', {}, fetchOptionsWithSkip),
+        ''
+      ],
+      [
+        'method get',
+        () => client.get('account', 'route', undefined, fetchOptionsWithBoth),
+        'Bearer of the token'
+      ],
+      [
+        'method post',
+        () => client.post('account', 'route', {}, fetchOptionsWithBoth),
+        'Bearer of the token'
+      ]
+    ])('%s', async (_name, func, expected) => {
       await to(func());
       expect(mockFetch).toHaveBeenCalledTimes(1);
       expect(mockFetch.mock.calls[0][1]).toMatchObject({
         headers: {
-          Authorization: 'Bearer of the token'
+          Authorization: expected
         }
       });
     });

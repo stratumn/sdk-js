@@ -12,6 +12,13 @@ declare module '@stratumn/js-crypto' {
         signature: Uint8Array;
         message: Uint8Array;
       };
+
+      publicKey: () => SigningPublicKey;
+    }
+
+    class SigningPublicKey {
+      constructor(opts: { pemPublicKey?: string });
+      verify: (sig: { signature: Uint8Array; message: Uint8Array }) => any;
     }
   }
 
@@ -29,5 +36,17 @@ declare module '@stratumn/js-crypto' {
     };
 
     const stringToB64String: (s: string) => string;
+
+    const b64StringToString: (s: string) => string;
+
+    const signatureFromJson: (sig: {
+      public_key: string;
+      signature: string;
+      message: string;
+    }) => {
+      public_key: Uint8Array;
+      signature: Uint8Array;
+      message: Uint8Array;
+    };
   }
 }

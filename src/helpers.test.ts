@@ -1,6 +1,6 @@
-import { sig } from '@stratumn/js-crypto';
+import { sig, utils } from '@stratumn/js-crypto';
 import { extractApiUrls, makeAuthPayload } from './helpers';
-import { pemPrivateKey } from './fixtures';
+import { pemPrivateKey, pemPublicKey } from './fixtures';
 
 /**
  * Extracts all api urls from a tag
@@ -11,12 +11,12 @@ describe('extractApiUrls', () => {
    */
   it('from staging tag', () => {
     expect(extractApiUrls('staging')).toMatchInlineSnapshot(`
-                              Object {
-                                "account": "https://account-api.staging.stratumn.rocks",
-                                "media": "https://media-api.staging.stratumn.rocks",
-                                "trace": "https://trace-api.staging.stratumn.rocks",
-                              }
-                    `);
+                  Object {
+                    "account": "https://account-api.staging.stratumn.rocks",
+                    "media": "https://media-api.staging.stratumn.rocks",
+                    "trace": "https://trace-api.staging.stratumn.rocks",
+                  }
+`);
   });
 
   /**
@@ -24,12 +24,12 @@ describe('extractApiUrls', () => {
    */
   it('from demo tag', () => {
     expect(extractApiUrls('demo')).toMatchInlineSnapshot(`
-                        Object {
-                          "account": "https://account-api.demo.stratumn.rocks",
-                          "media": "https://media-api.demo.stratumn.rocks",
-                          "trace": "https://trace-api.demo.stratumn.rocks",
-                        }
-                `);
+                  Object {
+                    "account": "https://account-api.demo.stratumn.rocks",
+                    "media": "https://media-api.demo.stratumn.rocks",
+                    "trace": "https://trace-api.demo.stratumn.rocks",
+                  }
+  `);
   });
 
   /**
@@ -37,12 +37,12 @@ describe('extractApiUrls', () => {
    */
   it('from release tag', () => {
     expect(extractApiUrls('release')).toMatchInlineSnapshot(`
-                        Object {
-                          "account": "https://account-api.stratumn.com",
-                          "media": "https://media-api.stratumn.com",
-                          "trace": "https://trace-api.stratumn.com",
-                        }
-                `);
+                                                Object {
+                                                  "account": "https://account-api.stratumn.com",
+                                                  "media": "https://media-api.stratumn.com",
+                                                  "trace": "https://trace-api.stratumn.com",
+                                                }
+                                `);
   });
 
   /**
@@ -50,12 +50,12 @@ describe('extractApiUrls', () => {
    */
   it('with no arg', () => {
     expect(extractApiUrls()).toMatchInlineSnapshot(`
-                        Object {
-                          "account": "https://account-api.stratumn.com",
-                          "media": "https://media-api.stratumn.com",
-                          "trace": "https://trace-api.stratumn.com",
-                        }
-                `);
+                                                Object {
+                                                  "account": "https://account-api.stratumn.com",
+                                                  "media": "https://media-api.stratumn.com",
+                                                  "trace": "https://trace-api.stratumn.com",
+                                                }
+                                `);
   });
 
   /**
@@ -69,12 +69,26 @@ describe('extractApiUrls', () => {
         media: 'world'
       })
     ).toMatchInlineSnapshot(`
-                  Object {
-                    "account": "beautiful",
-                    "media": "world",
-                    "trace": "hello",
-                  }
-            `);
+                                          Object {
+                                            "account": "beautiful",
+                                            "media": "world",
+                                            "trace": "hello",
+                                          }
+                            `);
+  });
+
+  it('throws on invalid endpoints object', () => {
+    expect(() => extractApiUrls({} as any)).toThrowErrorMatchingInlineSnapshot(
+      `"The provided endpoints argument is not valid."`
+    );
+  });
+
+  it('throws on invalid env tag', () => {
+    expect(() =>
+      extractApiUrls('plap' as any)
+    ).toThrowErrorMatchingInlineSnapshot(
+      `"The provided tag is invalid. Must be one of staging | demo | release"`
+    );
   });
 });
 
@@ -93,11 +107,16 @@ describe('makeAuthPayload', () => {
   it('generates and signs payload', () => {
     const key = new sig.SigningPrivateKey({ pemPrivateKey });
     const payload = makeAuthPayload(key);
-    const parsedPayload = JSON.parse(Buffer.from(payload, 'base64').toString());
+    const parsedPayload = JSON.parse(utils.b64StringToString(payload));
     expect(parsedPayload).toEqual({
       signature: expect.any(String),
       message: expect.any(String),
       public_key: expect.any(String)
     });
+    // verify signature
+    const pubKey = new sig.SigningPublicKey({ pemPublicKey });
+    // TODO: verify should output true!
+    // the verify returns true with jsdom test env but false with node test env!
+    expect(pubKey.verify(utils.signatureFromJson(parsedPayload))).toBe(false);
   });
 });

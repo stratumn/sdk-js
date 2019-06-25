@@ -83,14 +83,36 @@ export class Client {
    * Compute the bearer Authorization header of format "Bearer my_token".
    * If the token is undefined, the return header is an empty string "".
    *
-   * Optionnally, a token can be provided as an argument, useful for
-   * signature authentication method
-   *
-   * @param token optional token to be used instead of this.token
+   * @param token optional token to be used
    */
-  private getAuthorizationHeader(token?: string) {
-    const theToken = token || this.token;
-    return theToken ? `Bearer ${theToken}` : '';
+  private makeAuthorizationHeader(token?: string) {
+    return token ? `Bearer ${token}` : '';
+  }
+
+  /**
+   * Retrieves an authentication token based on the following waterfall:
+   * - if opts.authToken is set, use it to compute the auth header
+   * - if opts.skipAuth is true, return empty auth header
+   * - otherwise login and use the retrieved token to compute the auth header
+   *
+   * @param opts optional options
+   * @param opts.authToken optional token to be used
+   * @param opts.skipAuth optional flag to bypass authentication
+   */
+  private async getAuthorizationHeader(opts?: {
+    authToken?: string;
+    skipAuth?: boolean;
+  }) {
+    if (opts) {
+      const { skipAuth, authToken } = opts;
+      if (authToken) return this.makeAuthorizationHeader(authToken);
+      if (skipAuth) return this.makeAuthorizationHeader();
+    }
+    if (!this.token) {
+      await this.login();
+    }
+
+    return this.makeAuthorizationHeader(this.token);
   }
 
   /**
@@ -99,6 +121,13 @@ export class Client {
    */
   private setToken(token: string) {
     this.token = token;
+  }
+
+  /**
+   * To clear the existing token
+   */
+  private clearToken() {
+    this.token = undefined;
   }
 
   /**
@@ -117,11 +146,7 @@ export class Client {
     opts?: FetchOptions
   ): Promise<T> {
     const { authToken, skipAuth, retry } = opts || defaultFetchOptions;
-    // if the token is not yet set and we are not skipping the auth explicitly
-    // then first login to get a valid token
-    if (!this.token && !skipAuth) {
-      await this.login();
-    }
+
     // construct the target URL from the service + route
     const url = new URL(route, this.endpoints[service]).toString();
 
@@ -131,7 +156,10 @@ export class Client {
     const baseReq: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
-        Authorization: this.getAuthorizationHeader(authToken)
+        Authorization: await this.getAuthorizationHeader({
+          authToken,
+          skipAuth
+        })
       }
     };
 
@@ -147,7 +175,7 @@ export class Client {
     if (status === 401 && retry) {
       // unauthenticated request might be because token expired
       // clear token and retry
-      this.token = undefined;
+      this.clearToken();
       return this.fetch(service, route, req, { ...opts, retry: retry - 1 });
     }
 
@@ -186,12 +214,12 @@ export class Client {
     const signedToken = makeAuthPayload(signingPrivateKey);
 
     // call GET /login using the signed token as the auth token
-    // use skipAuth = true to bypass authentication
+    // to bypass authentication
     const { token } = await this.get<LoginResponse>(
       'account',
       'login',
       undefined,
-      { skipAuth: true, authToken: signedToken }
+      { authToken: signedToken }
     );
 
     // finally set the new token
@@ -328,17 +356,17 @@ export class Client {
     variables?: Variables,
     opts?: GraphQLOptions
   ): Promise<T> {
-    // if the token is not yet set then first login to get a valid token
-    if (!this.token) {
-      await this.login();
-    }
-
     // compile the trace graphql endpoint url to use
     const gqlUrl = new URL('graphql', this.endpoints.trace).toString();
 
     // delegate the graphql request execution
     const [err, rsp] = await to(
-      graphqlRequest(gqlUrl, this.getAuthorizationHeader(), query, variables)
+      graphqlRequest(
+        gqlUrl,
+        await this.getAuthorizationHeader(),
+        query,
+        variables
+      )
     );
 
     const { retry } = opts || defaultGraphQLOptions;
@@ -347,7 +375,7 @@ export class Client {
     if (err && err.response.status === 401 && retry) {
       // unauthenticated request might be because token expired
       // clear token and retry
-      this.token = undefined;
+      this.clearToken();
       return this.graphql<T>(query, variables, { ...opts, retry: retry - 1 });
     }
 
