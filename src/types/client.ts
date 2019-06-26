@@ -1,9 +1,4 @@
 /**
- * The environment tag
- */
-export type EnvTag = 'release' | 'staging' | 'demo';
-
-/**
  * The Stratumn service
  */
 export type Service = 'trace' | 'account' | 'media';
@@ -90,7 +85,7 @@ export interface ClientConfig {
    * Can also be a struct to configure each service endpoint, eg: { trace: 'https://...' .. }.
    * Defaults to release endpoints.
    */
-  endpoints?: EnvTag | Endpoints;
+  endpoints?: Endpoints;
 
   /**
    * The secret used to authenticate the input.

@@ -94,8 +94,8 @@ describe('Client', () => {
         secret: { publicKey: 'pub', password }
       });
       const [err] = await to(client.get('account', 'route'));
-      expect(err && err.message).toEqual(
-        'Authentication via password protected key is not handled'
+      expect(err!.message).toMatchInlineSnapshot(
+        `"Authentication via password protected key is not handled"`
       );
     });
 
@@ -107,8 +107,8 @@ describe('Client', () => {
         secret: {} as any
       });
       const [err] = await to(client.get('account', 'route'));
-      expect(err && err.message).toEqual(
-        'The provided secret does not have the right format'
+      expect(err!.message).toMatchInlineSnapshot(
+        `"The provided secret does not have the right format"`
       );
     });
 

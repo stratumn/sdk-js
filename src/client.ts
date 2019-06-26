@@ -20,7 +20,7 @@ import {
   SaltResponse,
   GraphQLOptions
 } from './types';
-import { extractApiUrls, makeAuthPayload } from './helpers';
+import { makeEndpoints, makeAuthPayload } from './helpers';
 
 /**
  * The default fetch options:
@@ -71,7 +71,7 @@ export class Client {
    * @param cfg the client configuration
    */
   constructor(cfg: ClientConfig) {
-    this.endpoints = extractApiUrls(cfg.endpoints);
+    this.endpoints = makeEndpoints(cfg.endpoints);
     this.secret = cfg.secret;
   }
 
@@ -311,7 +311,7 @@ export class Client {
     body: any,
     opts?: FetchOptions
   ) {
-    // creates teh request object with method POST
+    // creates the request object with method POST
     // and a stringified body
     const req: RequestInit = {
       method: 'POST',

@@ -1,52 +1,31 @@
-import { EnvTag, Endpoints, Service } from './types';
+import { Endpoints } from './types';
 import { sig, utils } from '@stratumn/js-crypto';
 
 /**
- * An array of Stratumn services
+ * The release endpoints.
  */
-const SERVICES: Service[] = ['account', 'media', 'trace'];
-
-/**
- * An array of Stratumn environments
- */
-const ENVS: EnvTag[] = ['staging', 'demo', 'release'];
-
-/**
- * Generates the api url of the service for a given environment
- *
- * @param env the environment tag
- * @param service the service name
- * @return the api url of the service
- */
-const makeApiUrl = (env: EnvTag, service: Service) => {
-  if (env === 'release') return `https://${service}-api.stratumn.com`;
-  return `https://${service}-api.${env}.stratumn.rocks`;
+const releaseEndpoints: Endpoints = {
+  account: 'https://account-api.stratumn.com',
+  trace: 'https://trace-api.stratumn.com',
+  media: 'https://media-api.stratumn.com'
 };
 
 /**
- * Generates the endpoints object for a given tag.
+ * Generates the endpoints object. If not specified, the release
+ * endpoints will be used by default.
  *
- * @param endpoints (optional) the environment tag or custom endpoints object
+ * @param endpoints (optional) the custom endpoints object
  * @return the endpoints object
  */
-export const extractApiUrls = (endpoints?: EnvTag | Endpoints) => {
-  if (typeof endpoints === 'object') {
-    const { account, media, trace } = endpoints;
-    if (!account || !trace || !media) {
-      throw new Error('The provided endpoints argument is not valid.');
-    }
-    return endpoints;
+export const makeEndpoints = (endpoints?: Endpoints) => {
+  if (!endpoints) {
+    return releaseEndpoints;
   }
-  let env: EnvTag = 'release';
-  if (typeof endpoints === 'string') {
-    if (!ENVS.includes(endpoints as EnvTag)) {
-      throw new Error(
-        `The provided tag is invalid. Must be one of ${ENVS.join(' | ')}`
-      );
-    }
-    env = endpoints;
+
+  const { account, media, trace } = endpoints;
+  if (!account || !trace || !media) {
+    throw new Error('The provided endpoints argument is not valid.');
   }
-  const [account, media, trace] = SERVICES.map(svc => makeApiUrl(env, svc));
   return { account, media, trace };
 };
 
