@@ -166,10 +166,13 @@ export class Client {
     // merge the first request part with the provided request
     // which contains the body, method etc...
     // then call fetch
+    // TODO: catch and handle errors
     const rsp = await fetch(url, merge(baseReq, req));
 
     // get the status to switch among various cases
     const { status } = rsp;
+
+    // TODO: have a proper status error code handling
 
     // if 401 and retry > 0 then we can retry
     if (status === 401 && retry) {
@@ -370,6 +373,8 @@ export class Client {
     );
 
     const { retry } = opts || defaultGraphQLOptions;
+
+    // TODO: have a proper status error code handling
 
     // if 401 and retry > 0 then we can retry
     if (err && err.response.status === 401 && retry) {
