@@ -1,0 +1,18 @@
+{
+  "extends": "tslint-config-airbnb",
+  "rules": {
+    "trailing-comma": false,
+    "import-name": false,
+    "ter-arrow-parens": [true, "as-needed"],
+    "quotemark": [true, "single"],
+    "no-boolean-literal-compare": false,
+    "variable-name": [
+      true,
+      "ban-keywords",
+      "check-format",
+      "allow-leading-underscore"
+    ],
+    "semicolon": [true, "always", "ignore-bound-class-methods"],
+    "object-shorthand-properties-first": false
+  }
+}

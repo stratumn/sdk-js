@@ -1,0 +1,12 @@
+export const pemPrivateKey = `
+-----BEGIN ED25519 PRIVATE KEY-----
+MFACAQAwBwYDK2VwBQAEQgRA3YYGIIAg4D7hsT5bXYE/OZsZrOon3h2u5R4ugDC1
+gjwSP9BQ2Dx7GyfNr8QX5fp695xnBr53x9i6YJCrLtWS8A==
+-----END ED25519 PRIVATE KEY-----
+`;
+
+export const pemPublicKey = `
+-----BEGIN ED25519 PUBLIC KEY-----
+MCowBQYDK2VwAyEAEj/QUNg8exsnza/EF+X6evecZwa+d8fYumCQqy7VkvA=
+-----END ED25519 PUBLIC KEY-----
+`;

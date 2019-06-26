@@ -1,0 +1,24 @@
+version: v1.0
+name: Publish Stratumn javascript SDK to npm registry
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: Publish
+    task:
+      secrets:
+        - name: npm-token-publish
+        - name: github-write
+      prologue:
+        commands:
+          - checkout
+          - cache restore lib-${SEMAPHORE_GIT_SHA}
+          - cache restore node-modules-$(checksum yarn.lock)
+          # We need to export the branch name in order for semantic-release to proceed.
+          - export BRANCH_NAME=$SEMAPHORE_GIT_BRANCH
+      jobs:
+        - name: Semantic Release
+          commands:
+            - yarn release
