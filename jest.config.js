@@ -19,7 +19,7 @@ const config = {
 const unitTests = Object.assign(
   {
     displayName: 'Unit Tests',
-    testRegex: '.*\\.test\\.ts$'
+    testRegex: '.*\\.spec\\.ts$'
   },
   config
 );
