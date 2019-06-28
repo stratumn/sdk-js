@@ -12,6 +12,7 @@ export namespace Fragments {
     export const document = gql`
       fragment TraceStateFragment on Trace {
         updatedAt
+        state
         head {
           raw
         }
@@ -20,6 +21,7 @@ export namespace Fragments {
 
     export interface Response {
       updatedAt: string;
+      state: any;
       head: {
         raw: Object;
       };
