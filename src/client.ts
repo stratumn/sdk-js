@@ -6,7 +6,7 @@ import merge from 'lodash.merge';
 import qs, { ParsedUrlQueryInput } from 'querystring';
 import bcrypt from 'bcryptjs';
 import { Variables } from 'graphql-request/dist/src/types';
-import graphqlRequest from './graphql';
+import graphqlRequest from './graphqlRequest';
 import {
   Endpoints,
   Service,
@@ -354,9 +354,9 @@ export class Client {
    * @param variables the graphql variables
    * @param opts the graphql options
    */
-  public async graphql<T = any>(
+  public async graphql<T = any, U = Variables>(
     query: string,
-    variables?: Variables,
+    variables?: U,
     opts?: GraphQLOptions
   ): Promise<T> {
     // compile the trace graphql endpoint url to use

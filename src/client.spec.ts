@@ -3,20 +3,22 @@ import fetch, { RequestInfo } from 'node-fetch';
 import bcrypt from 'bcryptjs';
 import { mocked } from 'ts-jest/utils';
 import { Client } from './client';
-import { pemPrivateKey } from './fixtures';
-import { FetchOptions } from 'types';
-import graphqlRequest from './graphql';
+import { fixtures } from './fixtures';
+import { FetchOptions } from './types';
+import graphqlRequest from './graphqlRequest';
 
 const fetchError = new Error('fetch error');
 const salt = bcrypt.genSaltSync();
 const email = 'alice';
 const password = 'secret';
+const token = 'valid';
 const passwordHash = bcrypt.hashSync(password, salt);
+const { pemPrivateKey } = fixtures.signingKey;
 
 jest.mock('node-fetch');
 const mockFetch = mocked(fetch);
 
-jest.mock('./graphql');
+jest.mock('./graphqlRequest');
 const mockGraphqlRequest = mocked(graphqlRequest);
 
 /**
@@ -124,7 +126,7 @@ describe('Client', () => {
 
       it.each([
         ['method get', () => client.get('account', 'route')],
-        ['method post', () => client.post('account', 'login', {})],
+        ['method post', () => client.post('account', 'route', {})],
         ['method graphql', () => client.graphql('query { me { name } }')]
       ])('%s', async (_name, func) => {
         await to(func());
@@ -132,6 +134,65 @@ describe('Client', () => {
         expect(mockFetch).toHaveBeenCalledWith(
           'https://account-api.stratumn.com/login',
           expect.any(Object)
+        );
+      });
+    });
+
+    /**
+     * Do not login twice in a row
+     */
+    describe('do not login the second time', () => {
+      let client: Client;
+      beforeEach(() => {
+        client = new Client({ secret: { privateKey: pemPrivateKey } });
+        mockFetch.mockImplementation(async (url: RequestInfo) => {
+          if (typeof url === 'string' && url.search('/salt?') > 0) {
+            return { status: 200, json: async () => ({ salt }) } as any;
+          }
+          if (typeof url === 'string' && url.search('/login') > 0) {
+            return { status: 200, json: async () => ({ token }) } as any;
+          }
+          throw fetchError;
+        });
+      });
+
+      it.each([
+        ['method get', () => client.get('account', 'route')],
+        ['method post', () => client.post('account', 'route', {})]
+      ])('%s', async (_name, func) => {
+        // call the first time
+        await to(func());
+        // clear the mock
+        mockFetch.mockClear();
+        // call the second time
+        await to(func());
+        // there should be only one call to the requested url
+        expect(mockFetch).toHaveBeenCalledTimes(1);
+        expect(mockFetch).toHaveBeenCalledWith(
+          'https://account-api.stratumn.com/route',
+          expect.any(Object)
+        );
+        expect(mockFetch.mock.calls[0][1]).toMatchObject({
+          headers: {
+            Authorization: 'Bearer valid'
+          }
+        });
+      });
+
+      it('method graphql', async () => {
+        // call the first time
+        await to(client.graphql('query { me { name } }'));
+        // clear the mock
+        mockGraphqlRequest.mockClear();
+        // call the second time
+        await to(client.graphql('query { me { name } }'));
+        // there should be only one call to the requested url
+        expect(mockGraphqlRequest).toHaveBeenCalledTimes(1);
+        expect(mockGraphqlRequest).toHaveBeenCalledWith(
+          'https://trace-api.stratumn.com/graphql',
+          'Bearer valid',
+          'query { me { name } }',
+          undefined
         );
       });
     });

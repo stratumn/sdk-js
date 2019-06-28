@@ -1,5 +1,5 @@
-import { Endpoints } from './types';
 import { sig, utils } from '@stratumn/js-crypto';
+import { Endpoints } from './types';
 
 /**
  * The release endpoints.

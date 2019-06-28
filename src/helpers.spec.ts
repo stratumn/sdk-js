@@ -1,6 +1,8 @@
 import { sig, utils } from '@stratumn/js-crypto';
 import { makeEndpoints, makeAuthPayload } from './helpers';
-import { pemPrivateKey, pemPublicKey } from './fixtures';
+import { fixtures } from './fixtures';
+
+const { pemPrivateKey, pemPublicKey } = fixtures.signingKey;
 
 /**
  * Make the endpoints object
