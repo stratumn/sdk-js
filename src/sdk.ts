@@ -172,8 +172,7 @@ export class Sdk<TState = any> {
       headLink,
       updatedAt: new Date(trace.updatedAt),
       updatedBy: headLink.createdBy(),
-      // TODO: get the state from trace api
-      data: {} as TState
+      data: trace.state
     };
     return state;
   }

@@ -13,7 +13,7 @@
   "typings": "lib/index.d.ts",
   "scripts": {
     "clean": "rimraf lib",
-    "prebuild": "yarn clean",
+    "prebuild": "yarn clean && yarn generate",
     "build": "tsc",
     "build:watch": "tsc -w",
     "test": "jest --watch --runInBand",
