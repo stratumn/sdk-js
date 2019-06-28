@@ -1,0 +1,9 @@
+schema: ./schema.graphql
+pluckConfig:
+  modules:
+    - name: 'gql-tag'
+generates:
+  ./__generated__.ts:
+    documents: ./src/graphql.ts
+    plugins:
+      - add: ''
