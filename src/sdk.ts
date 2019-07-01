@@ -248,7 +248,10 @@ export class Sdk<TState = any> {
   }
 
   /**
-   * Get the traces in a given stage (INCOMING, OUTGOING etc..)
+   * Get the traces in a given stage (INCOMING, OUTGOING or BACKLOG)
+   * If no stage correspond to the stageType, it will throw.
+   * If more than one stage is found (may happen for ATTESTATION),
+   * it will also throw.
    *
    * @param stageType the stage type
    * @param paginationInfo the pagination info

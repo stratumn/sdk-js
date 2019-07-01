@@ -6,6 +6,25 @@ import gql from 'gql-tag';
  */
 export namespace Fragments {
   /**
+   * The HeadLink fragment
+   */
+  export namespace HeadLink {
+    export const document = gql`
+      fragment HeadLinkFragment on Trace {
+        head {
+          raw
+        }
+      }
+    `;
+
+    export interface Response {
+      head: {
+        raw: Object;
+      };
+    }
+  }
+
+  /**
    * The TraceState fragment
    */
   export namespace TraceState {
@@ -189,10 +208,10 @@ export namespace GetHeadLinkQuery {
   export const document = gql`
     query getHeadLinkQuery($traceId: UUID!) {
       trace: traceById(id: $traceId) {
-        ...TraceStateFragment
+        ...HeadLinkFragment
       }
     }
-    ${Fragments.TraceState.document}
+    ${Fragments.HeadLink.document}
   `;
 
   export interface Variables {
@@ -200,7 +219,7 @@ export namespace GetHeadLinkQuery {
   }
 
   export interface Response {
-    trace: Fragments.TraceState.Response;
+    trace: Fragments.HeadLink.Response;
   }
 }
 
