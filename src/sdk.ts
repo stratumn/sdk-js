@@ -14,7 +14,8 @@ import {
   TraceDetails,
   PaginationInfo,
   TraceStageType,
-  TracesState
+  TracesState,
+  FileInfo
 } from './types';
 import {
   ConfigQuery,
@@ -28,6 +29,13 @@ import {
 import { Client } from './client';
 import { TraceLinkBuilder } from './traceLinkBuilder';
 import { fromObject, TraceLink } from './traceLink';
+import {
+  extractFileWrappers,
+  assignObjects,
+  extractFileRecords
+} from './helpers';
+import { FileWrapper } from './fileWrapper';
+import { FileRecord } from './fileRecord';
 
 /**
  * The Stratumn javascript Sdk
@@ -162,12 +170,14 @@ export class Sdk<TState = any> {
    * @param trace the trace fragment response
    * @returns the trace state
    */
-  private makeTraceState(trace: Fragments.TraceState.Response) {
+  private makeTraceState<TLinkData = any>(
+    trace: Fragments.TraceState.Response
+  ) {
     // retrieve parent link
-    const headLink = fromObject(trace.head.raw);
+    const headLink = fromObject<TLinkData>(trace.head.raw);
 
     // build the TraceState object
-    const state: TraceState<TState> = {
+    const state: TraceState<TState, TLinkData> = {
       traceId: headLink.traceId(),
       headLink,
       updatedAt: new Date(trace.updatedAt),
@@ -209,7 +219,7 @@ export class Sdk<TState = any> {
     );
 
     // build and return the TraceState object
-    return this.makeTraceState(rsp.createLink.trace);
+    return this.makeTraceState<TLinkData>(rsp.createLink.trace);
   }
 
   /**
@@ -312,6 +322,93 @@ export class Sdk<TState = any> {
     throw new Error(`Multiple ${stageType} stages`);
   }
 
+  /**
+   * Upload files in a idToFile map to Media service.
+   *
+   * @param idToFileWrapperMap the map containing all file wrappers to upload
+   * @returns a map id => FileRecord
+   */
+  private async uploadFiles(idToFileWrapperMap: Map<string, FileWrapper>) {
+    // if the map is empty return an empty map
+    if (!idToFileWrapperMap.size) {
+      return new Map<string, FileRecord>();
+    }
+
+    // build an array of id x file info
+    const fileInfos = await Promise.all(
+      Array.from(idToFileWrapperMap.entries()).map(
+        async ([id, file]) => <[string, FileInfo]>[id, await file.info()]
+      )
+    );
+
+    // use the underlying client to upload all files in map
+    const data = await this.client.uploadFiles(
+      Array.from(idToFileWrapperMap.values())
+    );
+
+    // remap the resulting media record in a map id => FileRecord
+    return new Map(
+      data.map((record, idx) => {
+        const [id, info] = fileInfos[idx];
+        return [id, new FileRecord(record, info)];
+      })
+    );
+  }
+
+  /**
+   * Extract, upload and replace all file wrappers in a link data object.
+   *
+   * @param data the link data that contains file wrappers to upload
+   */
+  private async uploadFilesInLinkData<TLinkData>(data: TLinkData) {
+    // extract file wrappers and corresponding paths
+    const {
+      idToObjectMap: idToFileWrapperMap,
+      pathToIdMap
+    } = extractFileWrappers(data);
+
+    // upload files and retrieve file records
+    const idToFileRecordMap = await this.uploadFiles(idToFileWrapperMap);
+
+    // assign file records back in data
+    return assignObjects<FileWrapper, FileRecord, TLinkData>(
+      data,
+      pathToIdMap,
+      idToFileRecordMap
+    );
+  }
+
+  /**
+   * Download all the files in a map from Media service.
+   *
+   * @param idToFileRecordMap the map containing all file records to download
+   * @returns a map id => FileWrapper
+   */
+  private async downloadFiles(idToFileRecordMap: Map<string, FileRecord>) {
+    // if the map is empty nothing to do.
+    if (!idToFileRecordMap.size) {
+      return new Map<string, FileWrapper>();
+    }
+
+    // download all files in the map and create FileWrapper
+    // around the returned blob data.
+    const promises = Array.from(idToFileRecordMap.entries()).map(
+      async ([id, record]) => {
+        const file = await this.client.downloadFile(record);
+        return [id, FileWrapper.fromNodeJsFileBlob(file, record)] as [
+          string,
+          FileWrapper
+        ];
+      }
+    );
+
+    // wait for all downloads to finish.
+    const fileWrappers = await Promise.all(promises);
+
+    // return the idToFileWrapper map
+    return new Map(fileWrappers);
+  }
+
   /*********************************************************
    *                   public methods                      *
    *********************************************************/
@@ -329,13 +426,16 @@ export class Sdk<TState = any> {
     // extract info from config
     const { workflowId, userId, ownerId, groupId } = await this.getConfig();
 
+    // upload files and transform data
+    const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
+
     // use a TraceLinkBuilder to create the first link
-    const linkBuilder = new TraceLinkBuilder<TLinkData>({
+    const linkBuilder = new TraceLinkBuilder<typeof dataAfterFileUpload>({
       // only provide workflowId to initiate a new trace
       workflowId
     })
       // this is an attestation
-      .forAttestation(formId, data)
+      .forAttestation(formId, dataAfterFileUpload)
       // add owner info
       .withOwner(ownerId)
       // add group info
@@ -363,15 +463,18 @@ export class Sdk<TState = any> {
     // extract info from config
     const { workflowId, userId, ownerId, groupId } = await this.getConfig();
 
+    // upload files and transform data
+    const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
+
     // use a TraceLinkBuilder to create the next link
-    const linkBuilder = new TraceLinkBuilder<TLinkData>({
+    const linkBuilder = new TraceLinkBuilder<typeof dataAfterFileUpload>({
       // provide workflow id
       workflowId,
       // and parent link to append to the existing trace
       parentLink
     })
       // this is an attestation
-      .forAttestation(formId, data)
+      .forAttestation(formId, dataAfterFileUpload)
       // add owner info
       .withOwner(ownerId)
       // add group info
@@ -637,5 +740,28 @@ export class Sdk<TState = any> {
    */
   public async getBacklogTraces(paginationInfo: PaginationInfo) {
     return this.getTracesInStage('BACKLOG', paginationInfo);
+  }
+
+  /**
+   * Extract, download and replace all file records in a data object.
+   *
+   * @param data the data that contains file records to download
+   */
+  public async downloadFilesInObject<TData>(data: TData) {
+    // extract file records and corresponding paths
+    const {
+      idToObjectMap: idToFileRecordMap,
+      pathToIdMap
+    } = extractFileRecords(data);
+
+    // download files and retrieve file wrappers
+    const idToFileWrapperMap = await this.downloadFiles(idToFileRecordMap);
+
+    // assign file wrappers back in data
+    return assignObjects<FileRecord, FileWrapper, TData>(
+      data,
+      pathToIdMap,
+      idToFileWrapperMap
+    );
   }
 }
