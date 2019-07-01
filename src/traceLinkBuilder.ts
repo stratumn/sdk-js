@@ -88,7 +88,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
 
   /**
    * Helper method used to configure a link for an attestation.
-   * User must still set owner, group and createdBy separatly.
+   * User must still set owner, group and createdBy separately.
    *
    * @param formId the form id used for the attestation
    * @param data the data of the attestation
@@ -191,7 +191,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
   /**
    * Helper method used to accept a transfer request.
    * Parent link must have been provided!
-   * User must still set owner, group and createdBy separatly.
+   * User must still set owner, group and createdBy separately.
    *
    * @param data the optional data
    */
