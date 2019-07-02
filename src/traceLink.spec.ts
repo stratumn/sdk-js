@@ -15,6 +15,7 @@ describe('TraceLink', () => {
     workflowId,
     traceId,
     data,
+    hashedData,
     type,
     ownerId,
     groupId,
@@ -28,15 +29,16 @@ describe('TraceLink', () => {
   beforeAll(() => {
     const builder = new LinkBuilder(workflowId, traceId);
     builder
-      .withData(data)
+      .withData(hashedData)
       .withProcessState(type)
       .withMetadata(metadata);
     const link = builder.build();
-    tLink = new TraceLink(link);
+    tLink = new TraceLink(link, data);
   });
 
   it('getters', () => {
-    expect(tLink.data()).toEqual(data);
+    expect(tLink.data()).toEqual(hashedData);
+    expect(tLink.originData()).toEqual(data);
     expect(tLink.traceId()).toEqual(traceId);
     expect(tLink.workflowId()).toEqual(workflowId);
     expect(tLink.type()).toEqual(type);
@@ -51,9 +53,11 @@ describe('TraceLink', () => {
   });
 
   it('fromObject', () => {
-    const newtLink = fromObject(tLink.toObject());
+    const newtLink = fromObject(tLink.toObject(), data);
     expect(newtLink).toBeInstanceOf(TraceLink);
     // check some props
+    expect(newtLink.data()).toEqual(hashedData);
+    expect(newtLink.originData()).toEqual(data);
     expect(newtLink.createdBy()).toEqual(createdById);
     expect(newtLink.createdAt()).toEqual(createdAt);
     expect(newtLink.owner()).toEqual(ownerId);

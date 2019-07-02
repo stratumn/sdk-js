@@ -1,10 +1,13 @@
 import { LinkBuilder } from '@stratumn/js-chainscript';
+import { stringify } from '@stratumn/canonicaljson';
+import crypto from 'crypto';
 import uuid from 'uuid/v4';
 import {
   TraceLinkType,
   TraceLinkMetaData,
   TraceLinkBuilderConfig,
-  TraceActionType
+  TraceActionType,
+  ITraceLink
 } from './types';
 import { TraceLink } from './traceLink';
 
@@ -16,7 +19,8 @@ import { TraceLink } from './traceLink';
  */
 export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
   private metadata: Partial<TraceLinkMetaData>;
-  private parentLink?: TraceLink;
+  private parentLink?: ITraceLink;
+  private rawData?: TLinkData;
 
   /**
    * Create a new instance of a TraceLinkBuilder.
@@ -75,13 +79,22 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
   }
 
   /**
-   * Set the data field if it is not undefined.
+   * Set the data field to the hash of the object argument.
    *
-   * @param data the optional data
+   * @param obj the optional object to be hashed
    */
-  private withOptionalData(data?: TLinkData) {
-    if (data) {
-      super.withData(data);
+  private withHashedData(obj?: TLinkData) {
+    if (obj) {
+      const algo = 'sha256';
+      const hash = crypto
+        .createHash(algo)
+        .update(stringify(obj))
+        .digest('base64');
+      this.withData({
+        algo,
+        hash
+      });
+      this.rawData = obj;
     }
     return this;
   }
@@ -96,7 +109,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
   public forAttestation(formId: string, data: TLinkData) {
     const action: TraceActionType = '_ATTESTATION_';
     const type: TraceLinkType = 'OWNED';
-    this.withData(data)
+    this.withHashedData(data)
       .withAction(action)
       .withProcessState(type);
     this.metadata.formId = formId;
@@ -122,7 +135,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
     const parent = this.getParentLink();
     this.withOwner(parent.owner())
       .withGroup(parent.group())
-      .withOptionalData(data)
+      .withHashedData(data)
       .withAction(action)
       .withProcessState(type);
     this.metadata.inputs = [to];
@@ -163,7 +176,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
     const type: TraceLinkType = 'OWNED';
     this.withOwner(parent.owner())
       .withGroup(parent.group())
-      .withOptionalData(data)
+      .withHashedData(data)
       .withAction(action)
       .withProcessState(type);
     return this;
@@ -182,7 +195,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
     const type: TraceLinkType = 'OWNED';
     this.withOwner(parent.owner())
       .withGroup(parent.group())
-      .withOptionalData(data)
+      .withHashedData(data)
       .withAction(action)
       .withProcessState(type);
     return this;
@@ -200,7 +213,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
     this.getParentLink();
     const action: TraceActionType = '_ACCEPT_TRANSFER_';
     const type: TraceLinkType = 'OWNED';
-    this.withOptionalData(data)
+    this.withHashedData(data)
       .withAction(action)
       .withProcessState(type);
     return this;
@@ -242,6 +255,6 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
   public build() {
     super.withMetadata(this.metadata);
     const link = super.build();
-    return new TraceLink<TLinkData>(link);
+    return new TraceLink<TLinkData>(link, this.rawData);
   }
 }

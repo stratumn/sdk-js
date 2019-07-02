@@ -24,6 +24,10 @@ export namespace fixtures {
     export const workflowId = '184475';
     export const traceId = '34c14147-eafd-4956-b46c-1ea4b9976af0';
     export const data = { some: 'data', for: 'the people' };
+    export const hashedData = {
+      algo: 'sha256',
+      hash: 'TnMst2eIwhyU7yg2izAItAyOOOrZgZDDmbRQ4G9rSqA='
+    };
     export const type: TraceLinkType = 'OWNED';
     export const ownerId = '563';
     export const groupId = '877';
