@@ -14,7 +14,7 @@ import {
   isCredentialSecret,
   isPrivateKeySecret,
   isProtectedKeySecret,
-  ClientConfig,
+  ClientOptions,
   FetchOptions,
   LoginResponse,
   SaltResponse,
@@ -68,11 +68,11 @@ export class Client {
 
   /**
    * Constructs a new instance of the Client
-   * @param cfg the client configuration
+   * @param opts the client options
    */
-  constructor(cfg: ClientConfig) {
-    this.endpoints = makeEndpoints(cfg.endpoints);
-    this.secret = cfg.secret;
+  constructor(opts: ClientOptions) {
+    this.endpoints = makeEndpoints(opts.endpoints);
+    this.secret = opts.secret;
   }
 
   /*********************************************************

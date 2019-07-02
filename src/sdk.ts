@@ -1,7 +1,7 @@
 import { sig } from '@stratumn/js-crypto';
 import {
+  SdkOptions,
   SdkConfig,
-  SdkSetup,
   NewTraceInput,
   isPrivateKeySecret,
   AppendLinkInput,
@@ -17,7 +17,7 @@ import {
   TracesState
 } from './types';
 import {
-  SetupQuery,
+  ConfigQuery,
   CreateLinkMutation,
   GetHeadLinkQuery,
   GetTraceStateQuery,
@@ -34,9 +34,9 @@ import { fromObject, TraceLink } from './traceLink';
  */
 export class Sdk<TState = any> {
   /**
-   * The Sdk config
+   * The Sdk options
    */
-  private config: SdkConfig;
+  private opts: SdkOptions;
 
   /**
    * The underlying REST / GraphQL client
@@ -44,17 +44,17 @@ export class Sdk<TState = any> {
   private client: Client;
 
   /**
-   * The setup object for the given workflow
+   * The config object for the given workflow
    */
-  private setup?: SdkSetup;
+  private config?: SdkConfig;
 
   /**
    * Constructs a new instance of the Sdk
-   * @param cfg the Sdk configuration
+   * @param opts the Sdk options
    */
-  constructor(cfg: SdkConfig) {
-    this.config = cfg;
-    this.client = new Client(cfg);
+  constructor(opts: SdkOptions) {
+    this.opts = opts;
+    this.client = new Client(opts);
   }
 
   /*********************************************************
@@ -62,29 +62,29 @@ export class Sdk<TState = any> {
    *********************************************************/
 
   /**
-   * Retrieves the Sdk setup for the given workflow.
-   * If the setup has not yet been computed, the Sdk will
+   * Retrieves the Sdk config for the given workflow.
+   * If the config has not yet been computed, the Sdk will
    * run a GraphQL query to retrieve the relevant info
-   * and will generate the setup.
+   * and will generate the config.
    *
-   * @returns the Sdk setup object
+   * @returns the Sdk config object
    */
-  private async getSetup(): Promise<SdkSetup> {
-    // if the setup already exists use it!
-    if (this.setup) {
-      return this.setup;
+  private async getConfig(): Promise<SdkConfig> {
+    // if the config already exists use it!
+    if (this.config) {
+      return this.config;
     }
 
-    // extract the workflow id from the config
-    const { workflowId } = this.config;
+    // extract the workflow id from the options
+    const { workflowId } = this.opts;
 
     // shortcut types
-    type Response = SetupQuery.Response;
-    type Variables = SetupQuery.Variables;
+    type Response = ConfigQuery.Response;
+    type Variables = ConfigQuery.Variables;
 
-    // run the GraphQL SetupQuery
+    // run the GraphQL ConfigQuery
     const rsp = await this.client.graphql<Response, Variables>(
-      SetupQuery.document,
+      ConfigQuery.document,
       { workflowId }
     );
 
@@ -127,10 +127,10 @@ export class Sdk<TState = any> {
 
     // retrieve the signing private key
     let signingPrivateKey: sig.SigningPrivateKey;
-    if (isPrivateKeySecret(this.config.secret)) {
+    if (isPrivateKeySecret(this.opts.secret)) {
       // if the secret is a PrivateKeySecret, use it!
       signingPrivateKey = new sig.SigningPrivateKey({
-        pemPrivateKey: this.config.secret.privateKey
+        pemPrivateKey: this.opts.secret.privateKey
       });
     } else if (!privateKey.passwordProtected) {
       // otherwise use the key from the response
@@ -142,8 +142,8 @@ export class Sdk<TState = any> {
       throw new Error('Cannot get signing private key');
     }
 
-    // store the new setup
-    this.setup = {
+    // store the new config
+    this.config = {
       workflowId,
       userId,
       accountId,
@@ -152,8 +152,8 @@ export class Sdk<TState = any> {
       signingPrivateKey
     };
 
-    // return the new setup
-    return this.setup;
+    // return the new config
+    return this.config;
   }
 
   /**
@@ -187,8 +187,8 @@ export class Sdk<TState = any> {
   private async createLink<TLinkData>(
     linkBuilder: TraceLinkBuilder<TLinkData>
   ) {
-    // extract signing key from setup
-    const { signingPrivateKey } = await this.getSetup();
+    // extract signing key from config
+    const { signingPrivateKey } = await this.getConfig();
 
     // build the link
     const link = linkBuilder.build();
@@ -261,8 +261,8 @@ export class Sdk<TState = any> {
     stageType: TraceStageType,
     paginationInfo: PaginationInfo
   ) {
-    // extract info from setup
-    const { groupId } = await this.getSetup();
+    // extract info from config
+    const { groupId } = await this.getConfig();
 
     // shortcut types
     type Response = GetTracesInStageQuery.Response;
@@ -326,8 +326,8 @@ export class Sdk<TState = any> {
     // extract info from input
     const { data, formId } = input;
 
-    // extract info from setup
-    const { workflowId, userId, ownerId, groupId } = await this.getSetup();
+    // extract info from config
+    const { workflowId, userId, ownerId, groupId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the first link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -360,8 +360,8 @@ export class Sdk<TState = any> {
     // extract info from input
     const { data, formId } = input;
 
-    // extract info from setup
-    const { workflowId, userId, ownerId, groupId } = await this.getSetup();
+    // extract info from config
+    const { workflowId, userId, ownerId, groupId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -396,8 +396,8 @@ export class Sdk<TState = any> {
     // extract info from input
     const { data, recipient } = input;
 
-    // extract info from setup
-    const { workflowId, userId } = await this.getSetup();
+    // extract info from config
+    const { workflowId, userId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -427,8 +427,8 @@ export class Sdk<TState = any> {
     // extract info from input
     const { data } = input;
 
-    // extract info from setup
-    const { workflowId, userId, groupId } = await this.getSetup();
+    // extract info from config
+    const { workflowId, userId, groupId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -460,8 +460,8 @@ export class Sdk<TState = any> {
     // extract info from input
     const { data } = input;
 
-    // extract info from setup
-    const { workflowId, userId, ownerId, groupId } = await this.getSetup();
+    // extract info from config
+    const { workflowId, userId, ownerId, groupId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -498,8 +498,8 @@ export class Sdk<TState = any> {
     // extract info from input
     const { data } = input;
 
-    // extract info from setup
-    const { workflowId, userId } = await this.getSetup();
+    // extract info from config
+    const { workflowId, userId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -532,8 +532,8 @@ export class Sdk<TState = any> {
     // extract info from input
     const { data } = input;
 
-    // extract info from setup
-    const { workflowId, userId } = await this.getSetup();
+    // extract info from config
+    const { workflowId, userId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({

@@ -107,11 +107,11 @@ export namespace Fragments {
  */
 
 /**
- * SetupQuery namespace, used to setup the Sdk for a given workflow
+ * ConfigQuery namespace, used to config the Sdk for a given workflow
  */
-export namespace SetupQuery {
+export namespace ConfigQuery {
   export const document = gql`
-    query setupQuery($workflowId: BigInt!) {
+    query configQuery($workflowId: BigInt!) {
       account: me {
         userId: rowId
         accountId

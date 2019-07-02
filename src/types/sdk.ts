@@ -1,10 +1,10 @@
 import { sig } from '@stratumn/js-crypto';
-import { ClientConfig } from './client';
+import { ClientOptions } from './client';
 
 /**
- * Config interface used to configure the Sdk.
+ * Options interface used to instantiate the Sdk.
  */
-export interface SdkConfig extends ClientConfig {
+export interface SdkOptions extends ClientOptions {
   /**
    * The workflow id (instantiate one sdk per workflow)
    */
@@ -12,9 +12,9 @@ export interface SdkConfig extends ClientConfig {
 }
 
 /**
- * Setup interface for the sdk
+ * Config interface for the sdk
  */
-export interface SdkSetup {
+export interface SdkConfig {
   /**
    * The workflow id
    */
