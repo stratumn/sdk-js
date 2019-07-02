@@ -77,9 +77,9 @@ export type Secret =  // the username + password case
   | PrivateKeySecret;
 
 /**
- * Config interface used to configure the Client.
+ * Options interface used to instantiate the Client.
  */
-export interface ClientConfig {
+export interface ClientOptions {
   /**
    * To configure the endpoints. Can be a short tag like 'release' or 'staging'.
    * Can also be a struct to configure each service endpoint, eg: { trace: 'https://...' .. }.

@@ -6,7 +6,7 @@ import merge from 'lodash.merge';
 import qs, { ParsedUrlQueryInput } from 'querystring';
 import bcrypt from 'bcryptjs';
 import { Variables } from 'graphql-request/dist/src/types';
-import graphqlRequest from './graphql';
+import graphqlRequest from './graphqlRequest';
 import {
   Endpoints,
   Service,
@@ -14,7 +14,7 @@ import {
   isCredentialSecret,
   isPrivateKeySecret,
   isProtectedKeySecret,
-  ClientConfig,
+  ClientOptions,
   FetchOptions,
   LoginResponse,
   SaltResponse,
@@ -68,11 +68,11 @@ export class Client {
 
   /**
    * Constructs a new instance of the Client
-   * @param cfg the client configuration
+   * @param opts the client options
    */
-  constructor(cfg: ClientConfig) {
-    this.endpoints = makeEndpoints(cfg.endpoints);
-    this.secret = cfg.secret;
+  constructor(opts: ClientOptions) {
+    this.endpoints = makeEndpoints(opts.endpoints);
+    this.secret = opts.secret;
   }
 
   /*********************************************************
@@ -354,9 +354,9 @@ export class Client {
    * @param variables the graphql variables
    * @param opts the graphql options
    */
-  public async graphql<T = any>(
+  public async graphql<T = any, U = Variables>(
     query: string,
-    variables?: Variables,
+    variables?: U,
     opts?: GraphQLOptions
   ): Promise<T> {
     // compile the trace graphql endpoint url to use
