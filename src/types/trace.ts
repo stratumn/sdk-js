@@ -39,7 +39,7 @@ export interface TraceLinkMetaData {
  * with common trace methods.
  */
 export interface ITraceLink<TLinkData = any> extends Link {
-  data(): TLinkData;
+  originData(): TLinkData;
   traceId(): string;
   workflowId(): string;
   type(): TraceLinkType;

@@ -14,6 +14,7 @@ describe('TraceLinkBuilder', () => {
     workflowId,
     traceId,
     data,
+    hashedData,
     ownerId,
     groupId,
     formId,
@@ -63,7 +64,8 @@ describe('TraceLinkBuilder', () => {
     const link = builder.build();
     const expectedAction: TraceActionType = '_ATTESTATION_';
     const expectedType: TraceLinkType = 'OWNED';
-    expect(link.data()).toEqual(data);
+    expect(link.originData()).toEqual(data);
+    expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
     expect(link.owner()).toEqual(ownerId);
@@ -76,7 +78,7 @@ describe('TraceLinkBuilder', () => {
     const link = builderWithParent.forPushTransfer(inputs[0], data).build();
     const expectedAction: TraceActionType = '_PUSH_OWNERSHIP_';
     const expectedType: TraceLinkType = 'PUSHING';
-    expect(link.data()).toEqual(data);
+    expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
     expect(link.owner()).toEqual(parentLink.owner());
@@ -89,7 +91,7 @@ describe('TraceLinkBuilder', () => {
     const link = builderWithParent.forPullTransfer(inputs[0], data).build();
     const expectedAction: TraceActionType = '_PULL_OWNERSHIP_';
     const expectedType: TraceLinkType = 'PULLING';
-    expect(link.data()).toEqual(data);
+    expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
     expect(link.owner()).toEqual(parentLink.owner());
@@ -102,7 +104,7 @@ describe('TraceLinkBuilder', () => {
     const link = builderWithParent.forCancelTransfer(data).build();
     const expectedAction: TraceActionType = '_CANCEL_TRANSFER_';
     const expectedType: TraceLinkType = 'OWNED';
-    expect(link.data()).toEqual(data);
+    expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
     expect(link.owner()).toEqual(parentLink.owner());
@@ -115,7 +117,7 @@ describe('TraceLinkBuilder', () => {
     const link = builderWithParent.forRejectTransfer(data).build();
     const expectedAction: TraceActionType = '_REJECT_TRANSFER_';
     const expectedType: TraceLinkType = 'OWNED';
-    expect(link.data()).toEqual(data);
+    expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
     expect(link.owner()).toEqual(parentLink.owner());
@@ -128,7 +130,7 @@ describe('TraceLinkBuilder', () => {
     const link = builderWithParent.forAcceptTransfer(data).build();
     const expectedAction: TraceActionType = '_ACCEPT_TRANSFER_';
     const expectedType: TraceLinkType = 'OWNED';
-    expect(link.data()).toEqual(data);
+    expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
     expect(link.owner()).toEqual(undefined);

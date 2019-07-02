@@ -174,7 +174,7 @@ export class Sdk<TState = any> {
     trace: Fragments.TraceState.Response
   ) {
     // retrieve parent link
-    const headLink = fromObject<TLinkData>(trace.head.raw);
+    const headLink = fromObject<TLinkData>(trace.head.raw, trace.head.data);
 
     // build the TraceState object
     const state: TraceState<TState, TLinkData> = {
@@ -215,7 +215,7 @@ export class Sdk<TState = any> {
       // the graphql document
       CreateLinkMutation.document,
       // export the link as object
-      { link: link.toObject({ bytes: String }) }
+      { link: link.toObject({ bytes: String }), data: link.originData() }
     );
 
     // build and return the TraceState object
@@ -249,7 +249,7 @@ export class Sdk<TState = any> {
       );
 
       // convert the raw response to a link object
-      const headLink = fromObject(rsp.trace.head.raw);
+      const headLink = fromObject(rsp.trace.head.raw, rsp.trace.head.data);
 
       // return the link
       return headLink;
@@ -696,7 +696,7 @@ export class Sdk<TState = any> {
     );
 
     // construct the link objects from raw responses
-    const links = rsp.trace.links.nodes.map(l => fromObject(l.raw));
+    const links = rsp.trace.links.nodes.map(l => fromObject(l.raw, l.data));
 
     // get pagination related info from response
     const { info, totalCount } = rsp.trace.links;

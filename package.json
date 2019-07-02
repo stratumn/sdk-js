@@ -23,6 +23,7 @@
     "generate": "graphql-codegen"
   },
   "dependencies": {
+    "@stratumn/canonicaljson": "^1.0.3",
     "@stratumn/js-chainscript": "^1.0.7",
     "@stratumn/js-crypto": "^1.4.0",
     "await-to-js": "^2.1.1",
