@@ -215,7 +215,7 @@ export class Sdk<TState = any> {
       // the graphql document
       CreateLinkMutation.document,
       // export the link as object
-      { link: link.toObject({ bytes: String }), data: link.originData() }
+      { link: link.toObject({ bytes: String }), data: link.formData() }
     );
 
     // build and return the TraceState object
