@@ -20,7 +20,7 @@ import { TraceLink } from './traceLink';
 export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
   private metadata: Partial<TraceLinkMetaData>;
   private parentLink?: ITraceLink;
-  private rawData?: TLinkData;
+  private formData?: TLinkData;
 
   /**
    * Create a new instance of a TraceLinkBuilder.
@@ -94,7 +94,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
         algo,
         hash
       });
-      this.rawData = obj;
+      this.formData = obj;
     }
     return this;
   }
@@ -255,6 +255,6 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
   public build() {
     super.withMetadata(this.metadata);
     const link = super.build();
-    return new TraceLink<TLinkData>(link, this.rawData);
+    return new TraceLink<TLinkData>(link, this.formData);
   }
 }

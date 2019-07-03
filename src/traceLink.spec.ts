@@ -38,7 +38,7 @@ describe('TraceLink', () => {
 
   it('getters', () => {
     expect(tLink.data()).toEqual(hashedData);
-    expect(tLink.originData()).toEqual(data);
+    expect(tLink.formData()).toEqual(data);
     expect(tLink.traceId()).toEqual(traceId);
     expect(tLink.workflowId()).toEqual(workflowId);
     expect(tLink.type()).toEqual(type);
@@ -57,7 +57,7 @@ describe('TraceLink', () => {
     expect(newtLink).toBeInstanceOf(TraceLink);
     // check some props
     expect(newtLink.data()).toEqual(hashedData);
-    expect(newtLink.originData()).toEqual(data);
+    expect(newtLink.formData()).toEqual(data);
     expect(newtLink.createdBy()).toEqual(createdById);
     expect(newtLink.createdAt()).toEqual(createdAt);
     expect(newtLink.owner()).toEqual(ownerId);

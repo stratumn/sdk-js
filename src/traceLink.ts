@@ -7,9 +7,9 @@ import { ITraceLink, TraceLinkType, TraceLinkMetaData } from './types';
  */
 export function fromObject<TLinkData = any>(
   rawLink: any,
-  rawData?: TLinkData
+  formData?: TLinkData
 ): TraceLink<TLinkData> {
-  return new TraceLink(fromLinkObject(rawLink), rawData);
+  return new TraceLink(fromLinkObject(rawLink), formData);
 }
 
 /**
@@ -18,21 +18,21 @@ export function fromObject<TLinkData = any>(
  */
 export class TraceLink<TLinkData = any> extends Link
   implements ITraceLink<TLinkData> {
-  private rawData?: TLinkData;
+  private _formData?: TLinkData;
 
-  constructor(link: Link, rawData?: TLinkData) {
+  constructor(link: Link, formData?: TLinkData) {
     // @ts-ignore we need to access the private link.link field
     super(link.link);
-    this.rawData = rawData;
+    this._formData = formData;
   }
 
   /**
-   * The origin TLinkData data of the link
+   * The form data of the link
    *
    * @returns the data as TLinkData
    */
-  originData() {
-    return this.rawData || (this.data() as TLinkData);
+  formData() {
+    return this._formData || (this.data() as TLinkData);
   }
 
   /**

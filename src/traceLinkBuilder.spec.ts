@@ -64,7 +64,7 @@ describe('TraceLinkBuilder', () => {
     const link = builder.build();
     const expectedAction: TraceActionType = '_ATTESTATION_';
     const expectedType: TraceLinkType = 'OWNED';
-    expect(link.originData()).toEqual(data);
+    expect(link.formData()).toEqual(data);
     expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
