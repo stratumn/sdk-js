@@ -435,7 +435,7 @@ export class Client {
     };
 
     // note that we use this.fetch directly and not this.post
-    // as we do not wat the body to be stringified and we
+    // as we do not what the body to be stringified and we
     // want to override the headers (see above)
     return this.fetch<MediaRecord[]>('media', '/files', req);
   }
