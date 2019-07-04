@@ -6,6 +6,7 @@ import { URL } from 'url';
 import merge from 'lodash.merge';
 import qs, { ParsedUrlQueryInput } from 'querystring';
 import bcrypt from 'bcryptjs';
+import { Mutex } from 'async-mutex';
 import { Variables } from 'graphql-request/dist/src/types';
 import graphqlRequest from './graphqlRequest';
 import {
@@ -68,6 +69,10 @@ export class Client {
    * The token received from account service after authentication
    */
   private token?: string;
+  /**
+   * The mutex used to prevent concurrent login requests
+   */
+  private mutex: Mutex;
 
   /**
    * Constructs a new instance of the Client
@@ -76,6 +81,7 @@ export class Client {
   constructor(opts: ClientOptions) {
     this.endpoints = makeEndpoints(opts.endpoints);
     this.secret = opts.secret;
+    this.mutex = new Mutex();
   }
 
   /*********************************************************
@@ -111,9 +117,8 @@ export class Client {
       if (authToken) return this.makeAuthorizationHeader(authToken);
       if (skipAuth) return this.makeAuthorizationHeader();
     }
-    if (!this.token) {
-      await this.login();
-    }
+
+    await this.login();
 
     return this.makeAuthorizationHeader(this.token);
   }
@@ -280,23 +285,42 @@ export class Client {
    * - PrivateKeySecret -> via signed message
    */
   private async login() {
-    if (isCredentialSecret(this.secret)) {
-      // the CredentialSecret case
-      const { email, password } = this.secret;
-      await this.loginWithCredentials(email, password);
-    } else if (isPrivateKeySecret(this.secret)) {
-      // the PrivateKeySecret case
-      const { privateKey } = this.secret;
-      await this.loginWithSigningPrivateKey(privateKey);
-    } else if (isProtectedKeySecret(this.secret)) {
-      // the ProtectedKeySecret case
-      // not handled yet
-      throw new Error(
-        'Authentication via password protected key is not handled'
-      );
-    } else {
-      // Unknown case
-      throw new Error('The provided secret does not have the right format');
+    // acquire the mutex
+    const release = await this.mutex.acquire();
+    try {
+      // if another concurrent execution has already
+      // done the job, then release and return, nothing to do.
+      if (this.token) {
+        release();
+        return;
+      }
+
+      // otherwise do the job...
+      if (isCredentialSecret(this.secret)) {
+        // the CredentialSecret case
+        const { email, password } = this.secret;
+        await this.loginWithCredentials(email, password);
+      } else if (isPrivateKeySecret(this.secret)) {
+        // the PrivateKeySecret case
+        const { privateKey } = this.secret;
+        await this.loginWithSigningPrivateKey(privateKey);
+      } else if (isProtectedKeySecret(this.secret)) {
+        // the ProtectedKeySecret case
+        // not handled yet
+        throw new Error(
+          'Authentication via password protected key is not handled'
+        );
+      } else {
+        // Unknown case
+        throw new Error('The provided secret does not have the right format');
+      }
+
+      // in case no error were thrown, release here
+      release();
+    } catch (err) {
+      // always release before rethrowing the error.
+      release();
+      throw err;
     }
   }
 

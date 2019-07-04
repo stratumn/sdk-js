@@ -194,6 +194,95 @@ describe('Client', () => {
         );
       });
     });
+
+    describe('concurrency', () => {
+      /**
+       * Here we test how the client behaves under concurrent execution.
+       * Since the client maintain a state for the token, there is a risk
+       * of concurrent login / writting of the token. This can happen at
+       * two moments: the first time we login (fresh after the sdk is instanciated)
+       * and when the token expires and receives 401s.
+       *
+       * The below test validates that in both cases there are not multiple
+       * concurrent login request done in parallel. The scenario is the following (in order):
+       * - sdk receives graphql request 1
+       * - sdk receives graphql request 2
+       * - sdk receives post request 1
+       * - sdk calls fetch for login (only once)
+       * - sdk calls graphqlRequest 1 (success)
+       * - sdk calls graphqlRequest 2 (success)
+       * - sdk calls fetch for post request 1 (success)
+       * At this point there has been 2 calls to fetch and the token expires
+       * so the sdk will receive 401s next:
+       * - sdk receives get request 1
+       * - sdk receives get request 2
+       * - sdk calls fetch for get request 1 (fails with 401)
+       * - sdk calls fetch for get request 2 (fails with 401)
+       * - sdk calls fetch for login (only once)
+       * - sdk calls fetch for get request 1 (retry once, success)
+       * - sdk calls fetch for get request 2 (retry once, success)
+       */
+      beforeEach(() => {
+        let nthCall = 0;
+        mockFetch.mockImplementation(async (url: RequestInfo) => {
+          nthCall += 1;
+          if (typeof url === 'string' && url.search('/salt?') > 0) {
+            return { status: 200, json: async () => ({ salt }) } as any;
+          }
+          if (typeof url === 'string' && url.search('/login') > 0) {
+            return { status: 200, json: async () => ({ token }) } as any;
+          }
+          // the 3rd and 4th call to fetch returns 401
+          if (nthCall === 3 || nthCall === 4) {
+            return { status: 401 } as any;
+          }
+          // otherwise success
+          return { status: 200, json: async () => ({}) } as any;
+        });
+        mockGraphqlRequest.mockResolvedValue({} as any);
+      });
+
+      it('login once only on multiple concurrent calls to login', async () => {
+        // start by making 2 graphql and 1 post requests
+        await Promise.all([
+          client.graphql('{ me }'),
+          client.graphql('{ info }'),
+          client.post('account', 'route', {})
+        ]);
+
+        // graphql should have been called twice
+        expect(mockGraphqlRequest).toHaveBeenCalledTimes(2);
+
+        // fetch should have been called twice: 1 login and 1 get
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+        expect(mockFetch.mock.calls.map(([url]) => url)).toEqual([
+          'https://account-api.stratumn.com/login',
+          'https://account-api.stratumn.com/route'
+        ]);
+
+        // clear the mock to start count from scratch
+        mockFetch.mockClear();
+
+        // then make 2 more get requests which should fail and retry
+        await Promise.all([
+          client.get('trace', 'route1'),
+          client.get('trace', 'route2')
+        ]);
+
+        // fetch should have been called 5 times:
+        // - 2 requests that returned 401
+        // - 1 login
+        // - 2 retry requests
+        expect(mockFetch).toHaveBeenCalledTimes(5);
+        expect(mockFetch.mock.calls.map(([url]) => url)).toEqual([
+          'https://trace-api.stratumn.com/route1',
+          'https://trace-api.stratumn.com/route2',
+          'https://account-api.stratumn.com/login',
+          'https://trace-api.stratumn.com/route1',
+          'https://trace-api.stratumn.com/route2'
+        ]);
+      });
+    });
   });
 
   /**
