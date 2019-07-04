@@ -1,6 +1,7 @@
 import to from 'await-to-js';
 import { sig } from '@stratumn/js-crypto';
 import fetch, { RequestInit } from 'node-fetch';
+import FormData from 'form-data';
 import { URL } from 'url';
 import merge from 'lodash.merge';
 import qs, { ParsedUrlQueryInput } from 'querystring';
@@ -18,9 +19,11 @@ import {
   FetchOptions,
   LoginResponse,
   SaltResponse,
-  GraphQLOptions
+  GraphQLOptions,
+  MediaRecord
 } from './types';
 import { makeEndpoints, makeAuthPayload } from './helpers';
+import { FileWrapper } from './fileWrapper';
 
 /**
  * The default fetch options:
@@ -155,7 +158,9 @@ export class Client {
     // - set the Authorization header
     const baseReq: RequestInit = {
       headers: {
-        'Content-Type': 'application/json',
+        // content-type in lowercase as
+        // FormData headers spell it like that.
+        'content-type': 'application/json',
         Authorization: await this.getAuthorizationHeader({
           authToken,
           skipAuth
@@ -392,5 +397,67 @@ export class Client {
 
     // finally return the response
     return rsp;
+  }
+
+  /**
+   * Uploads an array of files to media-api.
+   *
+   * @param files the file wrappers to upload
+   * @return the array of corresponding media records
+   */
+  public async uploadFiles(files: FileWrapper[]) {
+    // when no files are provided simply return an empty array
+    if (!files.length) {
+      return <MediaRecord[]>[];
+    }
+
+    // create the FormData that will collect all files
+    const formData = new FormData();
+
+    // iterate through files and append to form data
+    for (const file of files) {
+      // retrieve the info to get the file name
+      const info = await file.info();
+
+      // append file
+      formData.append(info.name, file.data());
+    }
+
+    // the base request that will be used to POST to media-api
+    const req: RequestInit = {
+      method: 'POST',
+      headers: {
+        // we must override the headers using the one from FormData
+        // see: https://github.com/form-data/form-data#axios
+        ...formData.getHeaders()
+      },
+      body: formData
+    };
+
+    // note that we use this.fetch directly and not this.post
+    // as we do not what the body to be stringified and we
+    // want to override the headers (see above)
+    return this.fetch<MediaRecord[]>('media', '/files', req);
+  }
+
+  /**
+   * Downloads a file corresponding to a media record.
+   *
+   * @param file the file record to download
+   * @return the file data blob (Buffer)
+   */
+  public async downloadFile(file: MediaRecord) {
+    // GET the file info from digest
+    const { download_url } = await this.get(
+      'media',
+      `/files/${file.digest}/info`
+    );
+
+    // use download_url to fetch the file data from storage
+    // TODO: handle errors
+    const rsp = await fetch(download_url);
+
+    // return the blob data
+    return rsp.blob();
   }
 }

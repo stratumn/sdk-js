@@ -1,4 +1,12 @@
-import { TraceLinkMetaData, TraceActionType, TraceLinkType } from './types';
+import {
+  TraceLinkMetaData,
+  TraceActionType,
+  TraceLinkType,
+  MediaRecord,
+  FileInfo
+} from '../types';
+import { FileWrapper } from '../fileWrapper';
+import { FileRecord } from '../fileRecord';
 
 export namespace fixtures {
   export namespace signingKey {
@@ -42,5 +50,37 @@ export namespace fixtures {
       createdAt,
       createdById
     };
+  }
+
+  const fileObj: MediaRecord & FileInfo = {
+    digest: 'abc123',
+    mimetype: 'text/plain',
+    name: 'data.txt',
+    size: 123
+  };
+
+  export namespace FileWrappers {
+    export const obj = fileObj;
+    export const nodeJsFilePath: FileWrapper = FileWrapper.fromNodeJsFilePath(
+      'src/fixtures/stratumn.png'
+    );
+    export const nodeJsFileBlob: FileWrapper = FileWrapper.fromNodeJsFileBlob(
+      Buffer.from('my data'),
+      fileObj
+    );
+    /**
+     * We wrap the creation of BrowserFile fixture
+     * in a function as the execution of `new File` below
+     * is platform dependent. Only tests that run in the jsdom
+     * test env will be able to call that function.
+     */
+    export const makeBrowserFile = (): FileWrapper =>
+      FileWrapper.fromBrowserFile(
+        new File(['my text file...'], 'novel.txt', { type: 'txt' })
+      );
+  }
+  export namespace FileRecords {
+    export const obj = fileObj;
+    export const fileRecord = FileRecord.fromObject(fileObj);
   }
 }

@@ -25,12 +25,17 @@ const mockGraphqlRequest = mocked(graphqlRequest);
  * Client tests
  */
 describe('Client', () => {
+  let client: Client;
+  beforeEach(() => {
+    mockFetch.mockReset();
+    mockGraphqlRequest.mockReset();
+    client = new Client({ secret: { privateKey: pemPrivateKey } });
+  });
   /**
    * Login mechanism is triggered whenever a request is made.
    */
   describe('login', () => {
     beforeEach(() => {
-      mockFetch.mockClear();
       mockFetch.mockImplementation(async (url: RequestInfo) => {
         if (typeof url === 'string' && url.search('/salt?') > 0) {
           return { status: 200, json: async () => ({ salt }) } as any;
@@ -53,13 +58,13 @@ describe('Client', () => {
       expect(mockFetch).toHaveBeenNthCalledWith(
         1,
         'https://account-api.stratumn.com/salt?email=alice',
-        { headers: { Authorization: '', 'Content-Type': 'application/json' } }
+        { headers: { Authorization: '', 'content-type': 'application/json' } }
       );
       expect(mockFetch).toHaveBeenNthCalledWith(
         2,
         'https://account-api.stratumn.com/login',
         {
-          headers: { Authorization: '', 'Content-Type': 'application/json' },
+          headers: { Authorization: '', 'content-type': 'application/json' },
           body: JSON.stringify({ email, passwordHash }),
           method: 'POST'
         }
@@ -82,7 +87,7 @@ describe('Client', () => {
         {
           headers: {
             Authorization: expect.stringMatching(/Bearer .*/),
-            'Content-Type': 'application/json'
+            'content-type': 'application/json'
           }
         }
       );
@@ -119,11 +124,6 @@ describe('Client', () => {
      * get, post or graphql query.
      */
     describe('always login first', () => {
-      let client: Client;
-      beforeEach(() => {
-        client = new Client({ secret: { privateKey: pemPrivateKey } });
-      });
-
       it.each([
         ['method get', () => client.get('account', 'route')],
         ['method post', () => client.post('account', 'route', {})],
@@ -142,9 +142,7 @@ describe('Client', () => {
      * Do not login twice in a row
      */
     describe('do not login the second time', () => {
-      let client: Client;
       beforeEach(() => {
-        client = new Client({ secret: { privateKey: pemPrivateKey } });
         mockFetch.mockImplementation(async (url: RequestInfo) => {
           if (typeof url === 'string' && url.search('/salt?') > 0) {
             return { status: 200, json: async () => ({ salt }) } as any;
@@ -216,10 +214,7 @@ describe('Client', () => {
       skipAuth: true
     };
 
-    let client: Client;
     beforeEach(() => {
-      client = new Client({ secret: { privateKey: pemPrivateKey } });
-      mockFetch.mockClear();
       mockFetch.mockRejectedValueOnce(fetchError);
     });
 
@@ -272,7 +267,6 @@ describe('Client', () => {
    * Retry logic when response status is 401
    */
   describe('retry', () => {
-    let client: Client;
     const saltRsp: any = {
       status: 200,
       json: async () => ({ salt })
@@ -287,8 +281,6 @@ describe('Client', () => {
      */
     describe('fetch', () => {
       beforeEach(() => {
-        client = new Client({ secret: { privateKey: pemPrivateKey } });
-        mockFetch.mockClear();
         // first attempt
         mockFetch.mockResolvedValueOnce(saltRsp);
         mockFetch.mockResolvedValueOnce(unauthenticatedRsp);
@@ -326,9 +318,6 @@ describe('Client', () => {
      */
     describe('graphql', () => {
       beforeEach(() => {
-        client = new Client({ secret: { privateKey: pemPrivateKey } });
-        mockFetch.mockClear();
-        mockGraphqlRequest.mockClear();
         // first attempt
         mockFetch.mockResolvedValueOnce(saltRsp);
         mockGraphqlRequest.mockRejectedValueOnce({ response: { status: 401 } });
@@ -363,6 +352,92 @@ describe('Client', () => {
           );
         }
       });
+    });
+  });
+
+  describe('uploadFiles', () => {
+    const { nodeJsFileBlob, nodeJsFilePath } = fixtures.FileWrappers;
+
+    beforeEach(() => {
+      mockFetch.mockImplementation(async (url: RequestInfo) => {
+        if (typeof url === 'string' && url.search('/salt?') > 0) {
+          return { status: 200, json: async () => ({ salt }) } as any;
+        }
+        if (typeof url === 'string' && url.search('/login') > 0) {
+          return { status: 200, json: async () => ({ token }) } as any;
+        }
+        return {
+          status: 200,
+          json: async () => [nodeJsFileBlob, nodeJsFilePath]
+        };
+      });
+    });
+
+    it('does not POST when files array is empty', async () => {
+      expect(await client.uploadFiles([])).toEqual([]);
+      expect(mockFetch).toHaveBeenCalledTimes(0);
+    });
+
+    it('POST files to media', async () => {
+      const rsp = await client.uploadFiles([nodeJsFileBlob, nodeJsFilePath]);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://media-api.stratumn.com/files',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: expect.stringMatching(/Bearer .*/),
+            'content-type': expect.stringContaining(
+              'multipart/form-data; boundary='
+            )
+          },
+          body: expect.any(Object)
+        }
+      );
+      expect(rsp).toEqual([nodeJsFileBlob, nodeJsFilePath]);
+    });
+  });
+
+  describe('downloadFile', () => {
+    const downloadUrl = 'download url';
+    const blob = Buffer.from('blob');
+    const { fileRecord } = fixtures.FileRecords;
+    beforeEach(() => {
+      mockFetch.mockImplementation(async (url: RequestInfo) => {
+        if (typeof url === 'string' && url.search('/salt?') > 0) {
+          return { status: 200, json: async () => ({ salt }) } as any;
+        }
+        if (typeof url === 'string' && url.search('/login') > 0) {
+          return { status: 200, json: async () => ({ token }) } as any;
+        }
+        if (typeof url === 'string' && url.search('/info') > 0) {
+          return {
+            status: 200,
+            json: async () => ({ download_url: downloadUrl })
+          } as any;
+        }
+        return {
+          status: 200,
+          blob: async () => blob
+        };
+      });
+    });
+
+    it('returns the blob data', async () => {
+      expect(await client.downloadFile(fileRecord)).toEqual(blob);
+      expect(mockFetch).toHaveBeenCalledTimes(3);
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://media-api.stratumn.com/files/abc123/info',
+        {
+          headers: {
+            Authorization: 'Bearer valid',
+            'content-type': 'application/json'
+          }
+        }
+      );
+      expect(mockFetch).toHaveBeenNthCalledWith(3, 'download url');
     });
   });
 });
