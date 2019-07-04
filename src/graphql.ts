@@ -20,8 +20,8 @@ export namespace Fragments {
 
     export interface Response {
       head: {
-        raw: Object;
-        data?: Object;
+        raw: any;
+        data?: any;
       };
     }
   }
@@ -45,8 +45,8 @@ export namespace Fragments {
       updatedAt: string;
       state: any;
       head: {
-        raw: Object;
-        data?: Object;
+        raw: any;
+        data?: any;
       };
     }
   }
@@ -194,8 +194,8 @@ export namespace CreateLinkMutation {
   `;
 
   export interface Variables {
-    link: Object;
-    data?: Object;
+    link: any;
+    data?: any;
   }
 
   export interface Response {
@@ -285,8 +285,8 @@ export namespace GetTraceDetailsQuery {
     trace: {
       links: {
         nodes: {
-          raw: Object;
-          data?: Object;
+          raw: any;
+          data?: any;
         }[];
       } & Fragments.PaginationInfo.Response;
     };
