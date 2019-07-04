@@ -1,3 +1,7 @@
+declare module '@stratumn/canonicaljson' {
+  export function stringify(obj: any): string;
+}
+
 declare module '@stratumn/js-crypto' {
   export namespace sig {
     class SigningPrivateKey {

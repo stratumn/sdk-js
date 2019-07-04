@@ -13,13 +13,15 @@ export namespace Fragments {
       fragment HeadLinkFragment on Trace {
         head {
           raw
+          data
         }
       }
     `;
 
     export interface Response {
       head: {
-        raw: Object;
+        raw: any;
+        data?: any;
       };
     }
   }
@@ -34,6 +36,7 @@ export namespace Fragments {
         state
         head {
           raw
+          data
         }
       }
     `;
@@ -42,7 +45,8 @@ export namespace Fragments {
       updatedAt: string;
       state: any;
       head: {
-        raw: Object;
+        raw: any;
+        data?: any;
       };
     }
   }
@@ -179,8 +183,8 @@ export namespace ConfigQuery {
  */
 export namespace CreateLinkMutation {
   export const document = gql`
-    mutation createLinkMutation($link: JSON!) {
-      createLink(input: { link: $link }) {
+    mutation createLinkMutation($link: JSON!, $data: JSON) {
+      createLink(input: { link: $link, data: $data }) {
         trace {
           ...TraceStateFragment
         }
@@ -190,7 +194,8 @@ export namespace CreateLinkMutation {
   `;
 
   export interface Variables {
-    link: Object;
+    link: any;
+    data?: any;
   }
 
   export interface Response {
@@ -263,6 +268,7 @@ export namespace GetTraceDetailsQuery {
         links(first: $first, last: $last, before: $before, after: $after) {
           nodes {
             raw
+            data
           }
           ...PaginationInfoOnLinksConnectionFragment
         }
@@ -279,7 +285,8 @@ export namespace GetTraceDetailsQuery {
     trace: {
       links: {
         nodes: {
-          raw: Object;
+          raw: any;
+          data?: any;
         }[];
       } & Fragments.PaginationInfo.Response;
     };
