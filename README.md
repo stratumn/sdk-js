@@ -43,7 +43,10 @@ The authentication secret can be one of the following:
 - a `CredentialSecret` object containing the email and password of the account
 - a `PrivateKeySecret` object containing the signing private key of the account
 
-Note: when a `PrivateKeySecret` is provided, a unique message is generated, signed and sent to [Account](https://account.stratumn.com) for validation. We check that the signature and the message are valid and return an authentication token in that case.
+Notes:
+
+- You can find the workflow id in the url of your workflow. For example, when looking at `https://trace.stratumn.com/workflow/95572258`, the id is `95572258`.
+- When a `PrivateKeySecret` is provided, a unique message is generated, signed and sent to [Account](https://account.stratumn.com) for validation. We check that the signature and the message are valid and return an authentication token in that case.
 
 ### Creating a new trace
 
@@ -66,13 +69,19 @@ You must provide:
 - `formId`: a valid form id,
 - `data`: the data object corresponding to the action being done.
 
-The Sdk will return an object corresponding to the "state" your new trace is in at the moment. This state exposes the following fields:
+The Sdk will return an object corresponding to the "state" of your new trace. This state exposes the following fields:
 
 - `traceId`: the id (uuid format) which uniquely identify the newly created trace,
 - `headLink`: the link that was last appended to the trace,
 - `updatedAt`: the `Date` at which the trace was last updated,
 - `updatedBy`: the id of the user who last updated the trace,
 - `data`: the aggregated data modelling the state the trace is in.
+
+Notes:
+
+- You can view your forms detail from your group's Attestation Forms page (for ex `https://trace.stratumn.com/group/322547/forms`).
+- When viewing a specific form detail, you can retrieve the form id from the url. (`https://trace.stratumn.com/group/322547/form/788547` => `formId=788547`).
+- The `data` object argument must be valid against the JSON schema of the form you are using, otherwise Trace will throw a validation error.
 
 ### Appending a link to an existing trace
 
@@ -109,7 +118,13 @@ You must provide:
 - `data`: the data object corresponding to the action being done,
 - `prevLink` or `traceId`.
 
-The Sdk will return the new state object the trace is now in. The shape of this object is the same as explained [previously](#creating-a-new-trace).
+The Sdk will return the new state object of the trace. The shape of this object is the same as explained [previously](#creating-a-new-trace).
+
+Notes:
+
+- You can view your forms detail from your group's Attestation Forms page (for ex `https://trace.stratumn.com/group/322547/forms`).
+- When viewing a specific form detail, you can retrieve the form id from the url. (`https://trace.stratumn.com/group/322547/form/788547` => `formId=788547`).
+- The `data` object argument must be valid against the JSON schema of the form you are using, otherwise Trace will throw a validation error.
 
 ### Requesting the transfer of ownership of a trace
 
@@ -147,11 +162,13 @@ And in this case, the arguments are:
 - `data`: (optional) some data related to the pull transfer,
 - `prevLink` or `traceId`.
 
-Note: you don't need to provide a `recipient` in the case of a `pullTransfer` since the two parties of the transfer can be inferred (you and the current owner the trace).
+The Sdk will return the new state object of the trace. The shape of this object is the same as explained [previously](#creating-a-new-trace).
 
-The Sdk will return the new state object the trace is now in. The shape of this object is the same as explained [previously](#creating-a-new-trace).
+Notes:
 
-Note: in both cases, the trace is not transferred automatically to or from the group. The recipient must respond to your request as we will see in the [next section](#responding-to-a-transfer-of-ownership-of-a-trace).
+- In both cases, the trace is not transferred automatically to or from the group. The recipient must respond to your request as we will see in the [next section](#responding-to-a-transfer-of-ownership-of-a-trace).
+- You don't need to provide a `recipient` in the case of a `pullTransfer` since the two parties of the transfer can be inferred (you and the current owner of the trace).
+- The `data` object argument is optional. When it is provided, it is a free form object that will not be validated against a JSON schema.
 
 ### Responding to a transfer of ownership of a trace
 
@@ -187,7 +204,11 @@ In all cases, the arguments are:
 - `data`: (optional) some data related to the pull transfer,
 - `prevLink` or `traceId`.
 
-The Sdk will return the new state object the trace is now in. The shape of this object is the same as explained [previously](#creating-a-new-trace).
+The Sdk will return the new state object of the trace. The shape of this object is the same as explained [previously](#creating-a-new-trace).
+
+Notes:
+
+- The `data` object argument is optional. When it is provided, it is a free form object that will not be validated against a JSON schema.
 
 ### Trace stages
 
@@ -199,15 +220,15 @@ Your group in the workflow is composed of multiple stages. There are always 3 de
 
 The other stages are called `Attestation` stages. They compose the logic of your group in the context of this workflow.
 
-Note:
+Notes:
 
-- when someone push a trace to your group, it will appear in your `Incoming` stage and their `Outgoing` stage
-- when you accept a transfer, the trace will move to your `Backlog` stage
-- when you reject a transfer, the trace will move back to its previous `Attestation` stage and disappear from the `Outgoing` and `Incoming` stages it was in.
+- When someone pushes a trace to your group, it will appear in your `Incoming` stage and their `Outgoing` stage.
+- When you accept a transfer, the trace will move to your `Backlog` stage.
+- When you reject a transfer, the trace will move back to its previous `Attestation` stage and disappear from the `Outgoing` and `Incoming` stages it was in.
 
 ### Retrieving traces
 
-When all you have is the id of a trace, you can get the state it is currently in by calling:
+When all you have is the id of a trace, you can get its state by calling:
 
 ```js
 await sdk.getTraceState({
@@ -290,7 +311,7 @@ When a method returns an array of elements (traces, links, etc..), it will be pa
 - `last`: (optional) retrieve the last n elements,
 - `before`: (optional) retrieve the elements before a certain point.
 
-Note: you must use `first` and/or `after` together, `last` and/or `before` together. If you try to retrieve the `first=n after=xyz` the Sdk will throw an error.
+You must use `first` and/or `after` together, `last` and/or `before` together. If you try to retrieve the `first=n before=xyz` the Sdk will throw an error.
 
 In the result object, you will have the `totalCount` and an `info` object that has the following fields:
 
@@ -321,7 +342,7 @@ if (results.info.hasNext) {
 }
 ```
 
-In the case there are more traces to retrieve (`hasNext === true`), we call the `getIncomingTraces` method again setting the `after` argument to the `endCursor`. We kep doing this until `hasNext === false`.
+In the case there are more traces to retrieve (`hasNext === true`), we call the `getIncomingTraces` method again setting the `after` argument to the `endCursor`. We keep doing this until `hasNext === false`.
 
 Putting all this together, we can synthetize this in a loop:
 
@@ -340,7 +361,7 @@ do {
 
 When providing a `data` object in an action (via `newTrace`, `appendLink` etc.), you can embed files that will automatically be uploaded for you. We provide two ways for embedding files, depending on the platform you app is running.
 
-In NodeJs, here is how you would do:
+In NodeJs, here is how you would do it:
 
 ```js
 var { FileWrapper } = require('@stratumn/sdk');
