@@ -235,17 +235,25 @@ describe('Client', () => {
         mockFetch.mockImplementation(async (url: RequestInfo) => {
           nthCall += 1;
           if (typeof url === 'string' && url.search('/salt?') > 0) {
-            return { status: 200, json: async () => ({ salt }) } as any;
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ salt })
+            } as any;
           }
           if (typeof url === 'string' && url.search('/login') > 0) {
-            return { status: 200, json: async () => ({ token }) } as any;
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ token })
+            } as any;
           }
           // the 3rd and 4th call to fetch returns 401
           if (nthCall === 3 || nthCall === 4) {
-            return { status: 401 } as any;
+            return { ok: false, status: 401 } as any;
           }
           // otherwise success
-          return { status: 200, json: async () => ({}) } as any;
+          return { ok: true, status: 200, json: async () => ({}) } as any;
         });
         mockGraphqlRequest.mockResolvedValue({} as any);
       });
