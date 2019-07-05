@@ -24,6 +24,7 @@ blocks:
     task:
       secrets:
         - name: codecov-sdk-js
+        - name: trace-continuous-testing
       prologue:
         commands:
           - checkout

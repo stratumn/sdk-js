@@ -24,6 +24,15 @@ const unitTests = Object.assign(
   config
 );
 
+const e2eTests = Object.assign(
+  {
+    displayName: 'E2E Tests',
+    testRegex: '.*\\.e2e\\.ts$',
+    globalSetup: '<rootDir>/src/tests/setupTests.js'
+  },
+  config
+);
+
 module.exports = {
-  projects: [unitTests]
+  projects: [unitTests, e2eTests]
 };
