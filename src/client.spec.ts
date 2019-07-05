@@ -199,7 +199,7 @@ describe('Client', () => {
       /**
        * Here we test how the client behaves under concurrent execution.
        * Since the client maintain a state for the token, there is a risk
-       * of concurrent login / writting of the token. This can happen at
+       * of concurrent login / writing of the token. This can happen at
        * two moments: the first time we login (fresh after the sdk is instanciated)
        * and when the token expires and receives 401s.
        *
