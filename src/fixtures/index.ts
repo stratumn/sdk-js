@@ -7,6 +7,7 @@ import {
 } from '../types';
 import { FileWrapper } from '../fileWrapper';
 import { FileRecord } from '../fileRecord';
+import { ConfigQuery, CreateLinkMutation } from '../graphql';
 
 export namespace fixtures {
   export namespace signingKey {
@@ -86,5 +87,48 @@ export namespace fixtures {
   export namespace FileRecords {
     export const obj = fileObj;
     export const fileRecord = FileRecord.fromObject(fileObj);
+  }
+
+  export namespace Sdk {
+    export const workflowId = traceLink.workflowId;
+    export const configQueryRsp: ConfigQuery.Response = {
+      account: {
+        userId: '117',
+        accountId: '225',
+        memberOf: {
+          nodes: [{ accountId: '123' }]
+        },
+        account: {
+          signingKey: {
+            privateKey: {
+              decrypted: signingKey.pemPrivateKey,
+              passwordProtected: false
+            }
+          }
+        }
+      },
+      workflow: {
+        groups: {
+          nodes: [{ accountId: '123', groupId: '887' }]
+        }
+      }
+    };
+    export const createLinkMutationImpl = (
+      variables: CreateLinkMutation.Variables
+    ) => {
+      const createLinkMutationRsp: CreateLinkMutation.Response = {
+        createLink: {
+          trace: {
+            head: {
+              data: variables.data,
+              raw: variables.link
+            },
+            state: {},
+            updatedAt: new Date().toString()
+          }
+        }
+      };
+      return createLinkMutationRsp;
+    };
   }
 }

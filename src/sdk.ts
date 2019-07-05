@@ -35,6 +35,7 @@ import {
   extractFileRecords
 } from './helpers';
 import { FileWrapper } from './fileWrapper';
+import { Mutex } from 'async-mutex';
 import { FileRecord } from './fileRecord';
 
 /**
@@ -55,7 +56,10 @@ export class Sdk<TState = any> {
    * The config object for the given workflow
    */
   private config?: SdkConfig;
-
+  /**
+   * The mutex used to prevent concurrent config requests
+   */
+  private mutex: Mutex;
   /**
    * Constructs a new instance of the Sdk
    * @param opts the Sdk options
@@ -63,6 +67,7 @@ export class Sdk<TState = any> {
   constructor(opts: SdkOptions) {
     this.opts = opts;
     this.client = new Client(opts);
+    this.mutex = new Mutex();
   }
 
   /*********************************************************
@@ -78,90 +83,105 @@ export class Sdk<TState = any> {
    * @returns the Sdk config object
    */
   private async getConfig(): Promise<SdkConfig> {
-    // if the config already exists use it!
-    if (this.config) {
-      return this.config;
-    }
+    // acquire the mutex
+    const release = await this.mutex.acquire();
 
-    // extract the workflow id from the options
-    const { workflowId } = this.opts;
+    try {
+      // if the config already exists use it!
+      if (this.config) {
+        release();
+        return this.config;
+      }
 
-    // shortcut types
-    type Response = ConfigQuery.Response;
-    type Variables = ConfigQuery.Variables;
+      // extract the workflow id from the options
+      const { workflowId } = this.opts;
 
-    // run the GraphQL ConfigQuery
-    const rsp = await this.client.graphql<Response, Variables>(
-      ConfigQuery.document,
-      { workflowId }
-    );
+      // shortcut types
+      type Response = ConfigQuery.Response;
+      type Variables = ConfigQuery.Variables;
 
-    // extract relevant info from the response
-    const {
-      account: {
+      // run the GraphQL ConfigQuery
+      const rsp = await this.client.graphql<Response, Variables>(
+        ConfigQuery.document,
+        { workflowId }
+      );
+
+      // extract relevant info from the response
+      const {
+        account: {
+          userId,
+          accountId,
+          memberOf,
+          account: {
+            signingKey: { privateKey }
+          }
+        },
+        workflow
+      } = rsp;
+
+      if (!workflow || !workflow.groups) {
+        throw new Error(`Cannot find workflow ${workflowId}`);
+      }
+
+      const { groups } = workflow;
+
+      // get all the account ids I am a member of
+      const myAccounts = memberOf.nodes.map(a => a.accountId);
+
+      // get all the groups that are owned by one of my accounts
+      const myGroups = groups.nodes.filter(g =>
+        myAccounts.includes(g.accountId)
+      );
+
+      // there must be at most one group!
+      if (myGroups.length > 1) {
+        throw new Error('More than one group to choose from.');
+      }
+      // there must be at least one group!
+      if (myGroups.length === 0) {
+        throw new Error('No group to choose from.');
+      }
+
+      // extract info from my only group
+      const [{ groupId, accountId: ownerId }] = myGroups;
+
+      // retrieve the signing private key
+      let signingPrivateKey: sig.SigningPrivateKey;
+      if (isPrivateKeySecret(this.opts.secret)) {
+        // if the secret is a PrivateKeySecret, use it!
+        signingPrivateKey = new sig.SigningPrivateKey({
+          pemPrivateKey: this.opts.secret.privateKey
+        });
+      } else if (!privateKey.passwordProtected) {
+        // otherwise use the key from the response
+        // if it's not password protected!
+        signingPrivateKey = new sig.SigningPrivateKey({
+          pemPrivateKey: privateKey.decrypted
+        });
+      } else {
+        throw new Error('Cannot get signing private key');
+      }
+
+      // store the new config
+      this.config = {
+        workflowId,
         userId,
         accountId,
-        memberOf,
-        account: {
-          signingKey: { privateKey }
-        }
-      },
-      workflow
-    } = rsp;
+        groupId,
+        ownerId,
+        signingPrivateKey
+      };
 
-    if (!workflow || !workflow.groups) {
-      throw new Error(`Cannot find workflow ${workflowId}`);
+      // in case no error were thrown, release here
+      release();
+
+      // return the new config
+      return this.config;
+    } catch (err) {
+      // always release before rethrowing the error.
+      release();
+      throw err;
     }
-
-    const { groups } = workflow;
-
-    // get all the account ids I am a member of
-    const myAccounts = memberOf.nodes.map(a => a.accountId);
-
-    // get all the groups that are owned by one of my accounts
-    const myGroups = groups.nodes.filter(g => myAccounts.includes(g.accountId));
-
-    // there must be at most one group!
-    if (myGroups.length > 1) {
-      throw new Error('More than one group to choose from.');
-    }
-    // there must be at least one group!
-    if (myGroups.length === 0) {
-      throw new Error('No group to choose from.');
-    }
-
-    // extract info from my only group
-    const [{ groupId, accountId: ownerId }] = myGroups;
-
-    // retrieve the signing private key
-    let signingPrivateKey: sig.SigningPrivateKey;
-    if (isPrivateKeySecret(this.opts.secret)) {
-      // if the secret is a PrivateKeySecret, use it!
-      signingPrivateKey = new sig.SigningPrivateKey({
-        pemPrivateKey: this.opts.secret.privateKey
-      });
-    } else if (!privateKey.passwordProtected) {
-      // otherwise use the key from the response
-      // if it's not password protected!
-      signingPrivateKey = new sig.SigningPrivateKey({
-        pemPrivateKey: privateKey.decrypted
-      });
-    } else {
-      throw new Error('Cannot get signing private key');
-    }
-
-    // store the new config
-    this.config = {
-      workflowId,
-      userId,
-      accountId,
-      groupId,
-      ownerId,
-      signingPrivateKey
-    };
-
-    // return the new config
-    return this.config;
   }
 
   /**
