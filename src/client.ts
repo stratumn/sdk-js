@@ -192,17 +192,21 @@ export class Client {
       }
 
       // otherwise that's a proper error
-      // try to extract first the (json) body of the response
-      let errBody: any;
-      try {
-        errBody = await rsp.json();
-      } catch (e) {
-        // do nothing if it fails, it means the body
-        // is not json and it's lost anyway..
+      // extract the text body of the response
+      // and try to convert it to JSON
+      const [e, errTxt] = await to(rsp.text());
+      let errJsn: any;
+      if (!e && errTxt) {
+        try {
+          errJsn = JSON.parse(errTxt);
+        } catch (_) {
+          // do nothing if it fails, it means the body
+          // is not json, we'll use the text body in this case
+        }
       }
 
       // throw that new error
-      throw new HttpError(status, statusText, errBody);
+      throw new HttpError(status, statusText, errJsn || errTxt);
     }
 
     let body;
@@ -492,17 +496,22 @@ export class Client {
 
     // handle errors explicitly
     if (!ok) {
-      // try to extract the (json) body of the response
-      let errBody: any;
-      try {
-        errBody = await rsp.json();
-      } catch (e) {
-        // do nothing if it fails, it means the body
-        // is not json and it's lost anyway..
+      // otherwise that's a proper error
+      // extract the text body of the response
+      // and try to convert it to JSON
+      const [e, errTxt] = await to(rsp.text());
+      let errJsn: any;
+      if (!e && errTxt) {
+        try {
+          errJsn = JSON.parse(errTxt);
+        } catch (_) {
+          // do nothing if it fails, it means the body
+          // is not json, we'll use the text body in this case
+        }
       }
 
       // throw that new error
-      throw new HttpError(status, statusText, errBody);
+      throw new HttpError(status, statusText, errJsn || errTxt);
     }
 
     // return the blob data
