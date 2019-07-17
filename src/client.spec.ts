@@ -38,7 +38,7 @@ describe('Client', () => {
     beforeEach(() => {
       mockFetch.mockImplementation(async (url: RequestInfo) => {
         if (typeof url === 'string' && url.search('/salt?') > 0) {
-          return { status: 200, json: async () => ({ salt }) } as any;
+          return { ok: true, status: 200, json: async () => ({ salt }) } as any;
         }
         throw fetchError;
       });
@@ -145,10 +145,18 @@ describe('Client', () => {
       beforeEach(() => {
         mockFetch.mockImplementation(async (url: RequestInfo) => {
           if (typeof url === 'string' && url.search('/salt?') > 0) {
-            return { status: 200, json: async () => ({ salt }) } as any;
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ salt })
+            } as any;
           }
           if (typeof url === 'string' && url.search('/login') > 0) {
-            return { status: 200, json: async () => ({ token }) } as any;
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ token })
+            } as any;
           }
           throw fetchError;
         });
@@ -227,17 +235,25 @@ describe('Client', () => {
         mockFetch.mockImplementation(async (url: RequestInfo) => {
           nthCall += 1;
           if (typeof url === 'string' && url.search('/salt?') > 0) {
-            return { status: 200, json: async () => ({ salt }) } as any;
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ salt })
+            } as any;
           }
           if (typeof url === 'string' && url.search('/login') > 0) {
-            return { status: 200, json: async () => ({ token }) } as any;
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({ token })
+            } as any;
           }
           // the 3rd and 4th call to fetch returns 401
           if (nthCall === 3 || nthCall === 4) {
-            return { status: 401 } as any;
+            return { ok: false, status: 401 } as any;
           }
           // otherwise success
-          return { status: 200, json: async () => ({}) } as any;
+          return { ok: true, status: 200, json: async () => ({}) } as any;
         });
         mockGraphqlRequest.mockResolvedValue({} as any);
       });
@@ -357,10 +373,12 @@ describe('Client', () => {
    */
   describe('retry', () => {
     const saltRsp: any = {
+      ok: true,
       status: 200,
       json: async () => ({ salt })
     };
     const unauthenticatedRsp: any = {
+      ok: false,
       status: 401,
       json: async () => ({ message: 'not authenticated' })
     };
@@ -409,13 +427,19 @@ describe('Client', () => {
       beforeEach(() => {
         // first attempt
         mockFetch.mockResolvedValueOnce(saltRsp);
-        mockGraphqlRequest.mockRejectedValueOnce({ response: { status: 401 } });
+        mockGraphqlRequest.mockRejectedValueOnce({
+          response: { ok: false, status: 401 }
+        });
         // second attempt
         mockFetch.mockResolvedValueOnce(saltRsp);
-        mockGraphqlRequest.mockRejectedValueOnce({ response: { status: 401 } });
+        mockGraphqlRequest.mockRejectedValueOnce({
+          response: { ok: false, status: 401 }
+        });
         // third attempt
         mockFetch.mockResolvedValueOnce(saltRsp);
-        mockGraphqlRequest.mockRejectedValueOnce({ response: { status: 401 } });
+        mockGraphqlRequest.mockRejectedValueOnce({
+          response: { ok: false, status: 401 }
+        });
       });
 
       it.each([
@@ -450,12 +474,17 @@ describe('Client', () => {
     beforeEach(() => {
       mockFetch.mockImplementation(async (url: RequestInfo) => {
         if (typeof url === 'string' && url.search('/salt?') > 0) {
-          return { status: 200, json: async () => ({ salt }) } as any;
+          return { ok: true, status: 200, json: async () => ({ salt }) } as any;
         }
         if (typeof url === 'string' && url.search('/login') > 0) {
-          return { status: 200, json: async () => ({ token }) } as any;
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({ token })
+          } as any;
         }
         return {
+          ok: true,
           status: 200,
           json: async () => [nodeJsFileBlob, nodeJsFilePath]
         };
@@ -495,18 +524,24 @@ describe('Client', () => {
     beforeEach(() => {
       mockFetch.mockImplementation(async (url: RequestInfo) => {
         if (typeof url === 'string' && url.search('/salt?') > 0) {
-          return { status: 200, json: async () => ({ salt }) } as any;
+          return { ok: true, status: 200, json: async () => ({ salt }) } as any;
         }
         if (typeof url === 'string' && url.search('/login') > 0) {
-          return { status: 200, json: async () => ({ token }) } as any;
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({ token })
+          } as any;
         }
         if (typeof url === 'string' && url.search('/info') > 0) {
           return {
+            ok: true,
             status: 200,
             json: async () => ({ download_url: downloadUrl })
           } as any;
         }
         return {
+          ok: true,
           status: 200,
           blob: async () => blob
         };

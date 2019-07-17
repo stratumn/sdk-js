@@ -22,6 +22,8 @@ blocks:
             - cache store $KEY node_modules
   - name: Test & Build
     task:
+      secrets:
+        - name: codecov-sdk-js
       prologue:
         commands:
           - checkout
@@ -33,6 +35,7 @@ blocks:
         - name: Test
           commands:
             - yarn test:ci
+            - curl -s https://codecov.io/bash | bash
         - name: Build
           commands:
             - KEY=lib-${SEMAPHORE_GIT_SHA}

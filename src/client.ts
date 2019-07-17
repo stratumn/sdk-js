@@ -7,7 +7,7 @@ import merge from 'lodash.merge';
 import qs, { ParsedUrlQueryInput } from 'querystring';
 import bcrypt from 'bcryptjs';
 import { Mutex } from 'async-mutex';
-import { Variables } from 'graphql-request/dist/src/types';
+import { Variables, ClientError } from 'graphql-request/dist/src/types';
 import graphqlRequest from './graphqlRequest';
 import {
   Endpoints,
@@ -25,6 +25,7 @@ import {
 } from './types';
 import { makeEndpoints, makeAuthPayload } from './helpers';
 import { FileWrapper } from './fileWrapper';
+import HttpError from './httpError';
 
 /**
  * The default fetch options:
@@ -174,40 +175,44 @@ export class Client {
     };
 
     // merge the first request part with the provided request
-    // which contains the body, method etc...
-    // then call fetch
-    // TODO: catch and handle errors
+    // which contains the body, method etc... then call fetch
     const rsp = await fetch(url, merge(baseReq, req));
 
-    // get the status to switch among various cases
-    const { status } = rsp;
+    // extract relevant info to check if request was a success
+    const { ok, status, statusText } = rsp;
 
-    // TODO: have a proper status error code handling
+    // handle errors explicitly
+    if (!ok) {
+      // if 401 and retry > 0 then we can retry
+      if (status === 401 && retry) {
+        // unauthenticated request might be because token expired
+        // clear token and retry
+        this.clearToken();
+        return this.fetch(service, route, req, { ...opts, retry: retry - 1 });
+      }
 
-    // if 401 and retry > 0 then we can retry
-    if (status === 401 && retry) {
-      // unauthenticated request might be because token expired
-      // clear token and retry
-      this.clearToken();
-      return this.fetch(service, route, req, { ...opts, retry: retry - 1 });
-    }
+      // otherwise that's a proper error
+      // extract the text body of the response
+      // and try to convert it to JSON
+      const [e, errTxt] = await to(rsp.text());
+      let errJsn: any;
+      if (!e && errTxt) {
+        try {
+          errJsn = JSON.parse(errTxt);
+        } catch (_) {
+          // do nothing if it fails, it means the body
+          // is not json, we'll use the text body in this case
+        }
+      }
 
-    // if 5xx then log the error and throw
-    if (status >= 500) {
-      console.error(await rsp.text());
-      throw new Error('Something went wrong');
+      // throw that new error
+      throw new HttpError(status, statusText, errJsn || errTxt);
     }
 
     let body;
     // 204 means there is no body
     if (status !== 204) {
       body = await rsp.json();
-    }
-
-    // if the body contains errors, log them and throw
-    if (body.errors) {
-      console.error(body.errors);
-      throw new Error('An error occurred');
     }
 
     // finally return the body
@@ -392,8 +397,8 @@ export class Client {
     const gqlUrl = new URL('graphql', this.endpoints.trace).toString();
 
     // delegate the graphql request execution
-    const [err, rsp] = await to(
-      graphqlRequest(
+    const [err, rsp] = await to<T, ClientError>(
+      graphqlRequest<T>(
         gqlUrl,
         await this.getAuthorizationHeader(),
         query,
@@ -403,20 +408,26 @@ export class Client {
 
     const { retry } = opts || defaultGraphQLOptions;
 
-    // TODO: have a proper status error code handling
+    // handle errors explicitly
+    if (err) {
+      // extract the status from the error response
+      const { status } = err.response;
 
-    // if 401 and retry > 0 then we can retry
-    if (err && err.response.status === 401 && retry) {
-      // unauthenticated request might be because token expired
-      // clear token and retry
-      this.clearToken();
-      return this.graphql<T>(query, variables, { ...opts, retry: retry - 1 });
+      // if 401 and retry > 0 then we can retry
+      if (status === 401 && retry) {
+        // unauthenticated request might be because token expired
+        // clear token and retry
+        this.clearToken();
+        return this.graphql<T>(query, variables, { ...opts, retry: retry - 1 });
+      }
+
+      // otherwise rethrow
+      throw err;
     }
 
-    // if an error occured, log it and throw
-    if (err || !rsp) {
-      console.error(err);
-      throw new Error('An error occurred');
+    // if the response is empty, throw.
+    if (!rsp) {
+      throw new Error('The graphql response is empty.');
     }
 
     // finally return the response
@@ -478,8 +489,30 @@ export class Client {
     );
 
     // use download_url to fetch the file data from storage
-    // TODO: handle errors
     const rsp = await fetch(download_url);
+
+    // extract relevant info to check if request was a success
+    const { ok, status, statusText } = rsp;
+
+    // handle errors explicitly
+    if (!ok) {
+      // otherwise that's a proper error
+      // extract the text body of the response
+      // and try to convert it to JSON
+      const [e, errTxt] = await to(rsp.text());
+      let errJsn: any;
+      if (!e && errTxt) {
+        try {
+          errJsn = JSON.parse(errTxt);
+        } catch (_) {
+          // do nothing if it fails, it means the body
+          // is not json, we'll use the text body in this case
+        }
+      }
+
+      // throw that new error
+      throw new HttpError(status, statusText, errJsn || errTxt);
+    }
 
     // return the blob data
     return rsp.blob();
