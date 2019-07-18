@@ -1,4 +1,4 @@
-# Stratumn SDK for JavaScript
+# Stratumn SDK for JavaScript [![npm version](https://badge.fury.io/js/%40stratumn%2Fsdk.svg)](https://badge.fury.io/js/%40stratumn%2Fsdk)
 
 The official Stratumn SDK for JavaScript to interact with [Trace](https://trace.stratumn.com), available for Node.js backends.
 
