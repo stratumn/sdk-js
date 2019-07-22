@@ -38,6 +38,14 @@ export namespace Fragments {
           raw
           data
         }
+        # TODO: temporary, remove once state computation
+        # is handled server side
+        links {
+          nodes {
+            raw
+            data
+          }
+        }
       }
     `;
 
