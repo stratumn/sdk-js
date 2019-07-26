@@ -20,7 +20,11 @@ export type TraceActionType =
 /**
  * The various stage types.
  */
-export type TraceStageType = 'INCOMING' | 'OUTGOING' | 'BACKLOG';
+export type TraceStageType =
+  | 'INCOMING'
+  | 'OUTGOING'
+  | 'BACKLOG'
+  | 'ATTESTATION';
 
 /**
  * The link metadata

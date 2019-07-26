@@ -33,7 +33,9 @@ export namespace Fragments {
     export const document = gql`
       fragment TraceStateFragment on Trace {
         updatedAt
-        state
+        state {
+          data
+        }
         head {
           raw
           data
@@ -51,7 +53,9 @@ export namespace Fragments {
 
     export interface Response {
       updatedAt: string;
-      state: any;
+      state: {
+        data: any
+      };
       head: {
         raw: any;
         data?: any;
@@ -310,13 +314,14 @@ export namespace GetTracesInStageQuery {
     query getTracesInStageQuery(
       $groupId: BigInt!
       $stageType: StageType!
+      $formId: BigInt
       $first: Int
       $last: Int
       $before: Cursor
       $after: Cursor
     ) {
       group: groupByRowId(rowId: $groupId) {
-        stages(condition: { type: $stageType }) {
+        stages(condition: { type: $stageType, formId: $formId }) {
           nodes {
             traces(first: $first, last: $last, before: $before, after: $after) {
               nodes {
@@ -335,6 +340,7 @@ export namespace GetTracesInStageQuery {
   export interface Variables extends Fragments.PaginationInfo.Variables {
     groupId: string;
     stageType: string;
+    formId?: string;
   }
 
   export interface Response {

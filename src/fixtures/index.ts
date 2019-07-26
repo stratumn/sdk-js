@@ -123,7 +123,9 @@ export namespace fixtures {
               data: variables.data,
               raw: variables.link
             },
-            state: {},
+            state: {
+              data: {}
+            },
             updatedAt: new Date().toString()
           }
         }

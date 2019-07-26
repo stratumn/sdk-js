@@ -202,7 +202,7 @@ export class Sdk<TState = any> {
       headLink,
       updatedAt: new Date(trace.updatedAt),
       updatedBy: headLink.createdBy(),
-      data: trace.state
+      data: trace.state.data
     };
     return state;
   }
@@ -278,19 +278,28 @@ export class Sdk<TState = any> {
   }
 
   /**
-   * Get the traces in a given stage (INCOMING, OUTGOING or BACKLOG)
-   * If no stage correspond to the stageType, it will throw.
-   * If more than one stage is found (may happen for ATTESTATION),
-   * it will also throw.
+   * Get the traces in a given stage (INCOMING, OUTGOING, BACKLOG, ATTESTATION)
+   * When stageType=ATTESTATION, you must also provide the form id to
+   * identify the stage.
+   * If no stage correspond to the stageType x formId, it will throw.
+   * If more than one stage is found it will also throw.
    *
    * @param stageType the stage type
    * @param paginationInfo the pagination info
+   * @param formId (optional) the formId in case of ATTESTATION
    * @return the traces in a given stage
    */
   private async getTracesInStage(
     stageType: TraceStageType,
-    paginationInfo: PaginationInfo
+    paginationInfo: PaginationInfo,
+    formId?: string
   ) {
+    // formId can only be set in ATTESTATION case
+    if ((stageType === 'ATTESTATION') !== !!formId) {
+      throw new Error(
+        'You must and can only provide formId when stageType is ATTESTATION'
+      );
+    }
     // extract info from config
     const { groupId } = await this.getConfig();
 
@@ -302,6 +311,7 @@ export class Sdk<TState = any> {
     const variables: Variables = {
       groupId,
       stageType,
+      formId,
       ...paginationInfo
     };
 
@@ -333,13 +343,16 @@ export class Sdk<TState = any> {
       return res;
     }
 
+    // compute detail for error
+    const stageDetail = `${stageType}${formId ? `:${formId}` : ''}`;
+
     // throw if no stages were found
     if (stages.length === 0) {
-      throw new Error(`No ${stageType} stage`);
+      throw new Error(`No ${stageDetail} stage`);
     }
 
     // throw if multiple stages were found
-    throw new Error(`Multiple ${stageType} stages`);
+    throw new Error(`Multiple ${stageDetail} stages`);
   }
 
   /**
@@ -760,6 +773,19 @@ export class Sdk<TState = any> {
    */
   public async getBacklogTraces(paginationInfo: PaginationInfo) {
     return this.getTracesInStage('BACKLOG', paginationInfo);
+  }
+
+  /**
+   * Get the traces in a given attestation stage.
+   *
+   * @param paginationInfo the pagination info
+   * @return the backlog traces
+   */
+  public async getAttestationTraces(
+    formId: string,
+    paginationInfo: PaginationInfo
+  ) {
+    return this.getTracesInStage('ATTESTATION', paginationInfo, formId);
   }
 
   /**
