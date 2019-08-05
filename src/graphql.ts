@@ -1,4 +1,5 @@
 import gql from 'gql-tag';
+import { SearchTracesFilter } from './types';
 
 /**
  * The Fragments namespace contains various fragments
@@ -40,6 +41,7 @@ export namespace Fragments {
           raw
           data
         }
+        tags
         # TODO: temporary, remove once state computation
         # is handled server side
         links {
@@ -54,12 +56,13 @@ export namespace Fragments {
     export interface Response {
       updatedAt: string;
       state: {
-        data: any
+        data: any;
       };
       head: {
         raw: any;
         data?: any;
       };
+      tags?: string[];
     }
   }
 
@@ -352,6 +355,79 @@ export namespace GetTracesInStageQuery {
           } & Fragments.PaginationInfo.Response;
         }[];
       };
+    };
+  }
+}
+
+/**
+ * AddTagsToTraceMutation namespace
+ */
+export namespace AddTagsToTraceMutation {
+  export const document = gql`
+    mutation addTagsToTraceMutation($traceId: UUID!, $tags: [String]!) {
+      addTagsToTrace(input: { traceRowId: $traceId, tags: $tags }) {
+        trace {
+          ...TraceStateFragment
+        }
+      }
+    }
+    ${Fragments.TraceState.document}
+  `;
+
+  export interface Variables {
+    traceId: string;
+    tags: string[];
+  }
+
+  export interface Response {
+    addTagsToTrace: {
+      trace: Fragments.TraceState.Response;
+    };
+  }
+}
+
+/**
+ * SearchTracesQuery namespace
+ */
+export namespace SearchTracesQuery {
+  export const document = gql`
+    query searchTracesQuery(
+      $workflowId: BigInt!
+      $first: Int
+      $last: Int
+      $before: Cursor
+      $after: Cursor
+      $filter: TraceFilter!
+    ) {
+      workflow: workflowByRowId(rowId: $workflowId) {
+        traces(
+          first: $first
+          last: $last
+          before: $before
+          after: $after
+          filter: $filter
+        ) {
+          nodes {
+            ...TraceStateFragment
+          }
+          ...PaginationInfoOnTracesConnectionFragment
+        }
+      }
+    }
+    ${Fragments.TraceState.document}
+    ${Fragments.PaginationInfo.OnTracesConnection.document}
+  `;
+
+  export interface Variables extends Fragments.PaginationInfo.Variables {
+    workflowId: string;
+    filter: SearchTracesFilter;
+  }
+
+  export interface Response {
+    workflow: {
+      traces: {
+        nodes: Fragments.TraceState.Response[];
+      } & Fragments.PaginationInfo.Response;
     };
   }
 }

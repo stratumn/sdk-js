@@ -1782,6 +1782,41 @@ enum Account_UsersOrderBy {
   PRIMARY_KEY_DESC
 }
 
+"""All input for the `addTagsToTrace` mutation."""
+input AddTagsToTraceInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  traceRowId: UUID
+  tags: [String]
+}
+
+"""The output of our `addTagsToTrace` mutation."""
+type AddTagsToTracePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  trace: Trace
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Workflow` that is related to this `Trace`."""
+  workflow: Workflow
+
+  """An edge for our `Trace`. May be used by Relay 1."""
+  traceEdge(
+    """The method to use when ordering `Trace`."""
+    orderBy: [TracesOrderBy!] = PRIMARY_KEY_ASC
+  ): TracesEdge
+}
+
 """All input for the `archiveTrace` mutation."""
 input ArchiveTraceInput {
   """
@@ -1858,6 +1893,7 @@ input AssignFormToGroupInput {
   clientMutationId: String
   groupId: BigInt
   formId: BigInt
+  formIdentifier: BigInt
 }
 
 """The output of our `assignFormToGroup` mutation."""
@@ -1961,12 +1997,6 @@ input BigIntListFilter {
   """Equal to the specified value, treating null like an ordinary value."""
   notDistinctFrom: [BigInt]
 
-  """Any array item is equal to the specified value."""
-  anyEqualTo: BigInt
-
-  """Any array item is not equal to the specified value."""
-  anyNotEqualTo: BigInt
-
   """Less than the specified value."""
   lessThan: [BigInt]
 
@@ -1978,6 +2008,21 @@ input BigIntListFilter {
 
   """Greater than or equal to the specified value."""
   greaterThanOrEqualTo: [BigInt]
+
+  """Contains the specified list of values."""
+  contains: [BigInt]
+
+  """Contained by the specified list of values."""
+  containedBy: [BigInt]
+
+  """Overlaps the specified list of values."""
+  overlaps: [BigInt]
+
+  """Any array item is equal to the specified value."""
+  anyEqualTo: BigInt
+
+  """Any array item is not equal to the specified value."""
+  anyNotEqualTo: BigInt
 
   """Any array item is less than the specified value."""
   anyLessThan: BigInt
@@ -2020,6 +2065,18 @@ input BooleanFilter {
 
   """Not included in the specified list."""
   notIn: [Boolean!]
+
+  """Less than the specified value."""
+  lessThan: Boolean
+
+  """Less than or equal to the specified value."""
+  lessThanOrEqualTo: Boolean
+
+  """Greater than the specified value."""
+  greaterThan: Boolean
+
+  """Greater than or equal to the specified value."""
+  greaterThanOrEqualTo: Boolean
 }
 
 """All input for the create `Form` mutation."""
@@ -2333,6 +2390,32 @@ type Evidence implements Node {
   backend: JSON
 }
 
+"""
+A filter to be used against `Evidence` object types. All fields are combined with a logical ‘and.’
+"""
+input EvidenceFilter {
+  """Filter by the object’s `provider` field."""
+  provider: StringFilter
+
+  """Filter by the object’s `createdAt` field."""
+  createdAt: DatetimeFilter
+
+  """Filter by the object’s `updatedAt` field."""
+  updatedAt: DatetimeFilter
+
+  """Filter by the object’s `data` field."""
+  data: JSONFilter
+
+  """Checks for all expressions in this list."""
+  and: [EvidenceFilter!]
+
+  """Checks for any expressions in this list."""
+  or: [EvidenceFilter!]
+
+  """Negates the expression."""
+  not: EvidenceFilter
+}
+
 """A connection to a list of `Evidence` values."""
 type EvidencesConnection {
   """A list of `Evidence` objects."""
@@ -2401,6 +2484,7 @@ input FloatFilter {
   greaterThanOrEqualTo: Float
 }
 
+"""A Trace form."""
 type Form implements Node {
   """
   A globally unique identifier. Can be used in various places throughout the system to identify this single value.
@@ -2436,7 +2520,18 @@ type Form implements Node {
 
   """The time when the form was last updated."""
   updatedAt: Datetime!
+
+  """The id of the workflow the form belongs to."""
   workflowId: BigInt!
+
+  """The version number of the form."""
+  version: BigInt!
+
+  """Denotes whether or not this is the active version of the form."""
+  active: Boolean!
+
+  """The identifier shared across all versions of a form."""
+  identifier: BigInt!
 
   """Reads a single `Workflow` that is related to this `Form`."""
   workflow: Workflow
@@ -2578,6 +2673,15 @@ input FormCondition {
 
   """Checks for equality with the object’s `workflowId` field."""
   workflowId: BigInt
+
+  """Checks for equality with the object’s `version` field."""
+  version: BigInt
+
+  """Checks for equality with the object’s `active` field."""
+  active: Boolean
+
+  """Checks for equality with the object’s `identifier` field."""
+  identifier: BigInt
 }
 
 """
@@ -2617,6 +2721,15 @@ input FormFilter {
   """Filter by the object’s `workflowId` field."""
   workflowId: BigIntFilter
 
+  """Filter by the object’s `version` field."""
+  version: BigIntFilter
+
+  """Filter by the object’s `active` field."""
+  active: BooleanFilter
+
+  """Filter by the object’s `identifier` field."""
+  identifier: BigIntFilter
+
   """Filter by the object’s `canUpdate` field."""
   canUpdate: BooleanFilter
 
@@ -2652,31 +2765,19 @@ input FormInput {
 
   """The icon attached to the form."""
   icon: String
+
+  """The id of the workflow the form belongs to."""
   workflowId: BigInt!
 }
 
-"""
-Represents an update to a `Form`. Fields that are set will be updated.
-"""
-input FormPatch {
-  """The name of the stage of the form."""
+"""An input for mutations affecting `FormPatchRecord`"""
+input FormPatchRecordInput {
   stageName: String
-
-  """The title of the form."""
   title: String
-
-  """The description of the form."""
   description: String
-
-  """The JSON schema of the form."""
   schema: JSON
-
-  """The UI schema of the form."""
   uiSchema: JSON
-
-  """The icon attached to the form."""
   icon: String
-  workflowId: BigInt
 }
 
 """A connection to a list of `Form` values."""
@@ -2730,6 +2831,12 @@ enum FormsOrderBy {
   UPDATED_AT_DESC
   WORKFLOW_ID_ASC
   WORKFLOW_ID_DESC
+  VERSION_ASC
+  VERSION_DESC
+  ACTIVE_ASC
+  ACTIVE_DESC
+  IDENTIFIER_ASC
+  IDENTIFIER_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
 }
@@ -2875,6 +2982,11 @@ type Group implements Node {
 
     """Read all values in the set after (below) this cursor."""
     after: Cursor
+
+    """
+    A filter to be used in determining which values should be returned by the collection.
+    """
+    filter: GroupMemberFilter
   ): GroupMembersConnection!
 
   """The owner of the group."""
@@ -2954,6 +3066,29 @@ type GroupMember {
 
   """The account of the member entity."""
   account: Account_Account
+}
+
+"""
+A filter to be used against `GroupMember` object types. All fields are combined with a logical ‘and.’
+"""
+input GroupMemberFilter {
+  """Filter by the object’s `accountId` field."""
+  accountId: BigIntFilter
+
+  """Filter by the object’s `reader` field."""
+  reader: BooleanFilter
+
+  """Filter by the object’s `admin` field."""
+  admin: BooleanFilter
+
+  """Checks for all expressions in this list."""
+  and: [GroupMemberFilter!]
+
+  """Checks for any expressions in this list."""
+  or: [GroupMemberFilter!]
+
+  """Negates the expression."""
+  not: GroupMemberFilter
 }
 
 """A connection to a list of `GroupMember` values."""
@@ -3059,8 +3194,29 @@ input JSONFilter {
   """Not included in the specified list."""
   notIn: [JSON!]
 
+  """Less than the specified value."""
+  lessThan: JSON
+
+  """Less than or equal to the specified value."""
+  lessThanOrEqualTo: JSON
+
+  """Greater than the specified value."""
+  greaterThan: JSON
+
+  """Greater than or equal to the specified value."""
+  greaterThanOrEqualTo: JSON
+
   """Contains the specified JSON."""
   contains: JSON
+
+  """Contains the specified key."""
+  containsKey: String
+
+  """Contains all of the specified keys."""
+  containsAllKeys: [String!]
+
+  """Contains any of the specified keys."""
+  containsAnyKeys: [String!]
 
   """Contained by the specified JSON."""
   containedBy: JSON
@@ -3148,6 +3304,11 @@ type Link implements Node {
 
     """Read all values in the set after (below) this cursor."""
     after: Cursor
+
+    """
+    A filter to be used in determining which values should be returned by the collection.
+    """
+    filter: EvidenceFilter
   ): EvidencesConnection!
 
   """The hash of the link."""
@@ -3321,9 +3482,6 @@ input LinkFilter {
   """Filter by the object’s `recipients` field."""
   recipients: JSONFilter
 
-  """Filter by the object’s `data` field."""
-  data: JSONFilter
-
   """Filter by the object’s `linkHash` field."""
   linkHash: StringFilter
 
@@ -3431,22 +3589,6 @@ type Mutation {
     input: CreateWorkflowInput!
   ): CreateWorkflowPayload
 
-  """Updates a single `Form` using its globally unique id and a patch."""
-  updateForm(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdateFormInput!
-  ): UpdateFormPayload
-
-  """Updates a single `Form` using a unique key and a patch."""
-  updateFormByRowId(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdateFormByRowIdInput!
-  ): UpdateFormPayload
-
   """Updates a single `Workflow` using its globally unique id and a patch."""
   updateWorkflow(
     """
@@ -3462,6 +3604,14 @@ type Mutation {
     """
     input: UpdateWorkflowByRowIdInput!
   ): UpdateWorkflowPayload
+
+  """Adds multiple tags to a trace."""
+  addTagsToTrace(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: AddTagsToTraceInput!
+  ): AddTagsToTracePayload
 
   """Archive a trace for the current user."""
   archiveTrace(
@@ -3503,6 +3653,14 @@ type Mutation {
     input: EditWorkflowMembershipInput!
   ): EditWorkflowMembershipPayload
 
+  """Removes multiple tags from a trace."""
+  removeTagsFromTrace(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: RemoveTagsFromTraceInput!
+  ): RemoveTagsFromTracePayload
+
   """Rename a trace for the current user."""
   renameTrace(
     """
@@ -3510,6 +3668,14 @@ type Mutation {
     """
     input: RenameTraceInput!
   ): RenameTracePayload
+
+  """Creates a new version of the form being updated."""
+  updateFormByIdentifier(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateFormByIdentifierInput!
+  ): UpdateFormByIdentifierPayload
 
   """Watch a trace for the current user."""
   watchTrace(
@@ -3604,6 +3770,18 @@ input ProcessStateFilter {
 
   """Not included in the specified list."""
   notIn: [ProcessState!]
+
+  """Less than the specified value."""
+  lessThan: ProcessState
+
+  """Less than or equal to the specified value."""
+  lessThanOrEqualTo: ProcessState
+
+  """Greater than the specified value."""
+  greaterThan: ProcessState
+
+  """Greater than or equal to the specified value."""
+  greaterThanOrEqualTo: ProcessState
 }
 
 """The root query type which gives access points into the data universe."""
@@ -3624,40 +3802,6 @@ type Query implements Node {
     """The globally unique `ID`."""
     id: ID!
   ): Node
-
-  """Reads and enables pagination through a set of `Form`."""
-  forms(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """The method to use when ordering `Form`."""
-    orderBy: [FormsOrderBy!] = [PRIMARY_KEY_ASC]
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: FormCondition
-
-    """
-    A filter to be used in determining which values should be returned by the collection.
-    """
-    filter: FormFilter
-  ): FormsConnection
 
   """Reads and enables pagination through a set of `Workflow`."""
   workflows(
@@ -3758,6 +3902,41 @@ input Ref {
   linkHash: String!
 }
 
+"""All input for the `removeTagsFromTrace` mutation."""
+input RemoveTagsFromTraceInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  traceRowId: UUID
+  tags: [String]
+}
+
+"""The output of our `removeTagsFromTrace` mutation."""
+type RemoveTagsFromTracePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  trace: Trace
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Workflow` that is related to this `Trace`."""
+  workflow: Workflow
+
+  """An edge for our `Trace`. May be used by Relay 1."""
+  traceEdge(
+    """The method to use when ordering `Trace`."""
+    orderBy: [TracesOrderBy!] = PRIMARY_KEY_ASC
+  ): TracesEdge
+}
+
 """All input for the `renameTrace` mutation."""
 input RenameTraceInput {
   """
@@ -3827,6 +4006,9 @@ type Stage implements Node {
   """The time when the stage was last updated."""
   updatedAt: Datetime!
 
+  """The identifier of the form referenced by this stage."""
+  formIdentifier: BigInt
+
   """Reads a single `Group` that is related to this `Stage`."""
   group: Group
 
@@ -3890,6 +4072,9 @@ input StageCondition {
 
   """Checks for equality with the object’s `updatedAt` field."""
   updatedAt: Datetime
+
+  """Checks for equality with the object’s `formIdentifier` field."""
+  formIdentifier: BigInt
 }
 
 """
@@ -3916,6 +4101,9 @@ input StageFilter {
 
   """Filter by the object’s `updatedAt` field."""
   updatedAt: DatetimeFilter
+
+  """Filter by the object’s `formIdentifier` field."""
+  formIdentifier: BigIntFilter
 
   """Filter by the object’s `canCreateTrace` field."""
   canCreateTrace: BooleanFilter
@@ -3973,6 +4161,8 @@ enum StagesOrderBy {
   CREATED_AT_DESC
   UPDATED_AT_ASC
   UPDATED_AT_DESC
+  FORM_IDENTIFIER_ASC
+  FORM_IDENTIFIER_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
 }
@@ -4013,6 +4203,18 @@ input StageTypeFilter {
 
   """Not included in the specified list."""
   notIn: [StageType!]
+
+  """Less than the specified value."""
+  lessThan: StageType
+
+  """Less than or equal to the specified value."""
+  lessThanOrEqualTo: StageType
+
+  """Greater than the specified value."""
+  greaterThan: StageType
+
+  """Greater than or equal to the specified value."""
+  greaterThanOrEqualTo: StageType
 }
 
 """
@@ -4152,12 +4354,6 @@ input StringListFilter {
   """Equal to the specified value, treating null like an ordinary value."""
   notDistinctFrom: [String]
 
-  """Any array item is equal to the specified value."""
-  anyEqualTo: String
-
-  """Any array item is not equal to the specified value."""
-  anyNotEqualTo: String
-
   """Less than the specified value."""
   lessThan: [String]
 
@@ -4169,6 +4365,21 @@ input StringListFilter {
 
   """Greater than or equal to the specified value."""
   greaterThanOrEqualTo: [String]
+
+  """Contains the specified list of values."""
+  contains: [String]
+
+  """Contained by the specified list of values."""
+  containedBy: [String]
+
+  """Overlaps the specified list of values."""
+  overlaps: [String]
+
+  """Any array item is equal to the specified value."""
+  anyEqualTo: String
+
+  """Any array item is not equal to the specified value."""
+  anyNotEqualTo: String
 
   """Any array item is less than the specified value."""
   anyLessThan: String
@@ -4198,6 +4409,9 @@ type Trace implements Node {
 
   """The time when the trace was last updated."""
   updatedAt: Datetime!
+
+  """The list of tags of the link."""
+  tags: [String]
 
   """Reads a single `Workflow` that is related to this `Trace`."""
   workflow: Workflow
@@ -4338,6 +4552,9 @@ input TraceCondition {
 
   """Checks for equality with the object’s `updatedAt` field."""
   updatedAt: Datetime
+
+  """Checks for equality with the object’s `tags` field."""
+  tags: [String]
 }
 
 """
@@ -4366,6 +4583,9 @@ input TraceFilter {
 
   """Filter by the object’s `updatedAt` field."""
   updatedAt: DatetimeFilter
+
+  """Filter by the object’s `tags` field."""
+  tags: StringListFilter
 
   """Filter by the object’s `archived` field."""
   archived: BooleanFilter
@@ -4445,6 +4665,8 @@ enum TracesOrderBy {
   CREATED_AT_DESC
   UPDATED_AT_ASC
   UPDATED_AT_DESC
+  TAGS_ASC
+  TAGS_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
 }
@@ -4467,51 +4689,24 @@ enum TransferResponseAction {
   _CANCEL_TRANSFER_
 }
 
-"""All input for the `updateFormByRowId` mutation."""
-input UpdateFormByRowIdInput {
+"""All input for the `updateFormByIdentifier` mutation."""
+input UpdateFormByIdentifierInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-
-  """
-  An object where the defined keys will be set on the `Form` being updated.
-  """
-  patch: FormPatch!
-
-  """The id of the form."""
-  rowId: BigInt!
+  identifier: BigInt!
+  patch: FormPatchRecordInput!
 }
 
-"""All input for the `updateForm` mutation."""
-input UpdateFormInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-
-  """
-  The globally unique `ID` which will identify a single `Form` to be updated.
-  """
-  id: ID!
-
-  """
-  An object where the defined keys will be set on the `Form` being updated.
-  """
-  patch: FormPatch!
-}
-
-"""The output of our update `Form` mutation."""
-type UpdateFormPayload {
+"""The output of our `updateFormByIdentifier` mutation."""
+type UpdateFormByIdentifierPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
-
-  """The `Form` that was updated by this mutation."""
   form: Form
 
   """
@@ -4725,7 +4920,7 @@ type Workflow implements Node {
   ): GroupsConnection!
 
   """Reads and enables pagination through a set of `Form`."""
-  forms(
+  allForms(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -4763,6 +4958,32 @@ type Workflow implements Node {
 
   """Is the current user allowed to update this workflow."""
   canUpdate: Boolean
+
+  """Returns all of the active forms for this workflow."""
+  forms(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A filter to be used in determining which values should be returned by the collection.
+    """
+    filter: FormFilter
+  ): FormsConnection!
 
   """Get all the links of the workflow"""
   links(
@@ -4809,6 +5030,11 @@ type Workflow implements Node {
 
     """Read all values in the set after (below) this cursor."""
     after: Cursor
+
+    """
+    A filter to be used in determining which values should be returned by the collection.
+    """
+    filter: WorkflowMemberFilter
   ): WorkflowMembersConnection!
 
   """The account that owns the workflow."""
@@ -4898,6 +5124,29 @@ type WorkflowMember {
 
   """The account of the member entity."""
   account: Account_Account
+}
+
+"""
+A filter to be used against `WorkflowMember` object types. All fields are combined with a logical ‘and.’
+"""
+input WorkflowMemberFilter {
+  """Filter by the object’s `accountId` field."""
+  accountId: BigIntFilter
+
+  """Filter by the object’s `reader` field."""
+  reader: BooleanFilter
+
+  """Filter by the object’s `admin` field."""
+  admin: BooleanFilter
+
+  """Checks for all expressions in this list."""
+  and: [WorkflowMemberFilter!]
+
+  """Checks for any expressions in this list."""
+  or: [WorkflowMemberFilter!]
+
+  """Negates the expression."""
+  not: WorkflowMemberFilter
 }
 
 """A connection to a list of `WorkflowMember` values."""
