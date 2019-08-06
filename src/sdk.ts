@@ -15,7 +15,9 @@ import {
   PaginationInfo,
   TraceStageType,
   TracesState,
-  FileInfo
+  FileInfo,
+  AddTagsToTraceInput,
+  SearchTracesFilter
 } from './types';
 import {
   ConfigQuery,
@@ -24,7 +26,9 @@ import {
   GetTraceStateQuery,
   GetTraceDetailsQuery,
   GetTracesInStageQuery,
-  Fragments
+  Fragments,
+  AddTagsToTraceMutation,
+  SearchTracesQuery
 } from './graphql';
 import { Client } from './client';
 import { TraceLinkBuilder } from './traceLinkBuilder';
@@ -202,7 +206,8 @@ export class Sdk<TState = any> {
       headLink,
       updatedAt: new Date(trace.updatedAt),
       updatedBy: headLink.createdBy(),
-      data: trace.state.data
+      data: trace.state.data,
+      tags: trace.tags || []
     };
     return state;
   }
@@ -212,7 +217,7 @@ export class Sdk<TState = any> {
    * executes the GraphQL mutation.
    *
    * @param input the input argument to create the Link
-   * @returns the new Link
+   * @returns the Trace
    */
   private async createLink<TLinkData>(
     linkBuilder: TraceLinkBuilder<TLinkData>
@@ -329,7 +334,7 @@ export class Sdk<TState = any> {
       // get the stage
       const [stage] = stages;
 
-      // extrace traces response and pagination
+      // extract traces response and pagination
       const { nodes, info, totalCount } = stage.traces;
 
       // constructs result
@@ -450,7 +455,7 @@ export class Sdk<TState = any> {
    * Creates a new Trace.
    *
    * @param input  the newTrace input argument
-   * @returns the new Link
+   * @returns the new Trace
    */
   public async newTrace<TLinkData>(input: NewTraceInput<TLinkData>) {
     // extract info from input
@@ -481,10 +486,35 @@ export class Sdk<TState = any> {
   }
 
   /**
+   * Add tags to an existing trace.
+   *
+   * @param input  the input argument
+   * @returns the Trace
+   */
+  public async addTagsToTrace<TLinkData = any>(input: AddTagsToTraceInput) {
+    const { traceId, tags } = input;
+
+    // shortcut types
+    type Response = AddTagsToTraceMutation.Response;
+    type Variables = AddTagsToTraceMutation.Variables;
+
+    // execute the graphql mutation
+    const rsp = await this.client.graphql<Response, Variables>(
+      // the graphql document
+      AddTagsToTraceMutation.document,
+      // export the link as object
+      { traceId, tags }
+    );
+
+    // build and return the TraceState object
+    return this.makeTraceState<TLinkData>(rsp.addTagsToTrace.trace);
+  }
+
+  /**
    * Appends a new Link to a Trace.
    *
    * @param input  the appendLink input argument
-   * @returns the new Link
+   * @returns the Trace
    */
   public async appendLink<TLinkData>(input: AppendLinkInput<TLinkData>) {
     // retrieve parent link
@@ -523,7 +553,7 @@ export class Sdk<TState = any> {
    * Push a trace to a recipient group.
    *
    * @param input the pushTrace input argument
-   * @returns the new Link
+   * @returns the Trace
    */
   public async pushTrace<TLinkData>(input: PushTransferInput<TLinkData>) {
     // retrieve parent link
@@ -555,7 +585,7 @@ export class Sdk<TState = any> {
    * Pull a trace from a group.
    *
    * @param input the pullTrace input argument
-   * @returns the new Link
+   * @returns the Trace
    */
   public async pullTrace<TLinkData>(input: PullTransferInput<TLinkData>) {
     // retrieve parent link
@@ -586,7 +616,7 @@ export class Sdk<TState = any> {
    * Accept a transfer of ownership
    *
    * @param input the acceptTransfer input argument
-   * @returns the new Link
+   * @returns the Trace
    */
   public async acceptTransfer<TLinkData>(
     input: TransferResponseInput<TLinkData>
@@ -623,7 +653,7 @@ export class Sdk<TState = any> {
    * Reject a transfer of ownership
    *
    * @param input the rejectTransfer input argument
-   * @returns the new Link
+   * @returns the Trace
    */
   public async rejectTransfer<TLinkData>(
     input: TransferResponseInput<TLinkData>
@@ -657,7 +687,7 @@ export class Sdk<TState = any> {
    * Cancel a transfer of ownership
    *
    * @param input the cancelTransfer input argument
-   * @returns the new Link
+   * @returns the Trace
    */
   public async cancelTransfer<TLinkData>(
     input: TransferResponseInput<TLinkData>
@@ -786,6 +816,47 @@ export class Sdk<TState = any> {
     paginationInfo: PaginationInfo
   ) {
     return this.getTracesInStage('ATTESTATION', paginationInfo, formId);
+  }
+
+  /**
+   * Search all the traces of the workflow
+   */
+  public async searchTraces(
+    filter: SearchTracesFilter,
+    paginationInfo: PaginationInfo
+  ) {
+    // shortcut types
+    type Response = SearchTracesQuery.Response;
+    type Variables = SearchTracesQuery.Variables;
+
+    // extract info from config
+    const { workflowId } = await this.getConfig();
+
+    // create variables
+    const variables: Variables = {
+      workflowId,
+      filter,
+      ...paginationInfo
+    };
+
+    // execute graphql query
+    const rsp = await this.client.graphql<Response, Variables>(
+      SearchTracesQuery.document,
+      variables
+    );
+
+    // extract traces response and pagination
+    const { nodes, info, totalCount } = rsp.workflow.traces;
+
+    // constructs result
+    const res: TracesState<TState> = {
+      traces: nodes.map(this.makeTraceState),
+      info,
+      totalCount
+    };
+
+    // return result
+    return res;
   }
 
   /**

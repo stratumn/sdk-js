@@ -81,6 +81,15 @@ export interface AppendLinkInput<TLinkData = any> {
 }
 
 /**
+ * Interface used as argument to add tags to an existing trace.
+ * User must provide the trace id and the tags.
+ */
+export interface AddTagsToTraceInput {
+  traceId: string;
+  tags: string[];
+}
+
+/**
  * Interface used as argument to push a trace.
  * User must provide the trace id and the recipient id.
  * User can optionally provide the previous link hash, if not it will be fetched
@@ -152,6 +161,14 @@ export interface PaginationResult {
 }
 
 /**
+ * The trace filter object used to search through all traces
+ * of a workflow.
+ */
+export interface SearchTracesFilter {
+  // TODO
+}
+
+/**
  * Interface used as argument to get the trace details.
  * User must provide the trace id.
  * For pagination, user can provide either:
@@ -171,6 +188,7 @@ export interface GetTraceDetailsInput extends PaginationInfo {
  * - the date at which it was last updated
  * - the person who last updated it
  * - some abstract data validated against a predefined schema
+ * - the tags of the trace
  */
 export interface TraceState<TState = any, TLinkData = any> {
   traceId: string;
@@ -178,6 +196,7 @@ export interface TraceState<TState = any, TLinkData = any> {
   updatedAt: Date;
   updatedBy: Account;
   data: TState;
+  tags: string[];
 }
 
 /**

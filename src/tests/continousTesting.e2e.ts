@@ -126,4 +126,18 @@ it('continuous testing', async () => {
       size: expect.any(Number)
     }
   ]);
+
+  const state = await sdkBot2.addTagsToTrace({
+    traceId: firstRequest.traceId,
+    tags: ['accepted', 'todo']
+  });
+
+  expect(state.tags).toEqual(['accepted', 'todo']);
+
+  const searchResults = await sdkBot2.searchTraces(
+    { tags: { overlaps: ['todo', 'other tag'] } },
+    {}
+  );
+
+  expect(searchResults.totalCount).toBeGreaterThanOrEqual(1);
 }, 30000); // set custom timeout of 30 seconds as this test can take a long time to run
