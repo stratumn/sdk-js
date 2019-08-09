@@ -26,6 +26,15 @@ declare module '@stratumn/js-crypto' {
     }
   }
 
+  export namespace aes {
+    class SymmetricKey {
+      constructor(raw?: string);
+      export: () => { key: string };
+      encrypt: (data: any, encoding?: string) => string;
+      decrypt: (data: any, encoding?: string) => string;
+    }
+  }
+
   export namespace utils {
     const stringToBytes: (s: string) => Uint8Array;
 
@@ -53,4 +62,9 @@ declare module '@stratumn/js-crypto' {
       message: Uint8Array;
     };
   }
+}
+
+declare module 'promise-file-reader' {
+  export const readAsArrayBuffer: (file: File) => Promise<ArrayBuffer>;
+  export const readAsText: (file: File) => Promise<string>;
 }

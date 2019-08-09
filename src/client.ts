@@ -454,8 +454,12 @@ export class Client {
       // retrieve the info to get the file name
       const info = await file.info();
 
-      // append file
-      formData.append(info.name, file.data());
+      // append file (always encrypted)
+      formData.append(info.name, await file.encryptedData(), {
+        // always pass the filename so that multer (media-api)
+        // knows it is a file and not a blob of data
+        filename: info.name
+      });
     }
 
     // the base request that will be used to POST to media-api
@@ -479,7 +483,7 @@ export class Client {
    * Downloads a file corresponding to a media record.
    *
    * @param file the file record to download
-   * @return the file data blob (Buffer)
+   * @return the file data (Buffer)
    */
   public async downloadFile(file: MediaRecord) {
     // GET the file info from digest
@@ -514,7 +518,7 @@ export class Client {
       throw new HttpError(status, statusText, errJsn || errTxt);
     }
 
-    // return the blob data
-    return rsp.blob();
+    // return the data as buffer
+    return rsp.buffer();
   }
 }

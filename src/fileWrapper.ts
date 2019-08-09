@@ -1,13 +1,16 @@
 import { basename } from 'path';
-import { stat, PathLike, ReadStream, createReadStream } from 'fs';
+import { stat, PathLike, readFile } from 'fs';
 import { promisify } from 'util';
 import to from 'await-to-js';
 import uuid from 'uuid/v4';
 import mime from 'mime';
+import PromiseFileReader from 'promise-file-reader';
+import { aes } from '@stratumn/js-crypto';
 import { FileInfo, Identifiable } from './types';
 
 // async version of fs.stat
 const statAsync = promisify(stat);
+const readFileAsync = promisify(readFile);
 
 /**
  * A file wrapper is a file representation on the platform.
@@ -21,6 +24,40 @@ export abstract class FileWrapper implements Identifiable {
    */
   public id = uuid();
 
+  public key?: aes.SymmetricKey;
+
+  constructor(disableEncryption?: boolean, key?: string) {
+    if (!disableEncryption) {
+      this.key = new aes.SymmetricKey(key);
+    }
+  }
+
+  protected encryptData(data: Buffer) {
+    if (!this.key) {
+      return data;
+    }
+    const encrypted = this.key.encrypt(data, 'binary');
+    return Buffer.from(encrypted, 'base64');
+  }
+
+  protected decryptData(data: Buffer) {
+    if (!this.key) {
+      return data;
+    }
+    return Buffer.from(
+      this.key.decrypt(data.toString('base64'), 'binary'),
+      'base64'
+    );
+  }
+
+  protected addKeyToFileInfo(info: FileInfo) {
+    if (!this.key) {
+      return info;
+    }
+    const { key } = this.key.export();
+    return { ...info, key };
+  }
+
   /**
    * Get the file info. This method is async
    * as in the NodeJs case, the info is retrieved
@@ -28,10 +65,9 @@ export abstract class FileWrapper implements Identifiable {
    */
   abstract async info(): Promise<FileInfo>;
 
-  /**
-   * The actual file data.
-   */
-  abstract data(): File | ReadStream | Buffer;
+  abstract async encryptedData(): Promise<Buffer>;
+
+  abstract async decryptedData(): Promise<Buffer>;
 
   /**
    * Creates a FileWrapper from a browser file representation.
@@ -83,11 +119,18 @@ class BrowserFileWrapper extends FileWrapper {
 
   async info() {
     const { type: mimetype, size, name } = this.file;
-    return { mimetype, size, name };
+    return this.addKeyToFileInfo({ mimetype, size, name });
   }
 
-  data() {
-    return this.file;
+  private async data() {
+    return Buffer.from(await PromiseFileReader.readAsArrayBuffer(this.file));
+  }
+
+  decryptedData = this.data;
+
+  async encryptedData() {
+    const data = await this.data();
+    return super.encryptData(data);
   }
 }
 
@@ -117,11 +160,18 @@ class NodeJsFilePathWrapper extends FileWrapper {
     const mimetype = mime.getType(this.filepath.toString()) || 'Unknown';
     const name = basename(this.filepath.toString());
 
-    return { mimetype, size, name };
+    return this.addKeyToFileInfo({ mimetype, size, name });
   }
 
-  data() {
-    return createReadStream(this.filepath);
+  private data() {
+    return readFileAsync(this.filepath);
+  }
+
+  decryptedData = this.data;
+
+  async encryptedData() {
+    const data = await this.data();
+    return super.encryptData(data);
   }
 }
 
@@ -132,15 +182,23 @@ class NodeJsFilePathWrapper extends FileWrapper {
 class NodeJsFileBlobWrapper extends FileWrapper {
   private blob: Buffer;
   private fileInfo: FileInfo;
+
   constructor(blob: Buffer, fileInfo: FileInfo) {
-    super();
+    super(!fileInfo.key, fileInfo.key);
     this.blob = blob;
     this.fileInfo = fileInfo;
   }
+
   async info() {
     return this.fileInfo;
   }
-  data() {
-    return this.blob;
+
+  async decryptedData() {
+    const decrypted = super.decryptData(this.blob);
+    return Promise.resolve(decrypted);
+  }
+
+  async encryptedData() {
+    return Promise.resolve(this.blob);
   }
 }

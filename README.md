@@ -21,7 +21,7 @@ yarn add @stratumn/sdk
 You must start by importing the `Sdk` class definition:
 
 ```js
-var Sdk = require('@stratumn/sdk');
+var { Sdk } = require('@stratumn/sdk');
 ```
 
 You can then create a new instance of the `Sdk`:
@@ -47,6 +47,19 @@ Notes:
 
 - You can find the workflow id in the url of your workflow. For example, when looking at `https://trace.stratumn.com/workflow/95572258`, the id is `95572258`.
 - When a `PrivateKeySecret` is provided, a unique message is generated, signed and sent to [Account](https://account.stratumn.com) for validation. We check that the signature and the message are valid and return an authentication token in that case.
+- By default the `Sdk` is configured to point to the production environment of Trace. During a development phase, you can configure the `Sdk` to point to the staging environment:
+
+```js
+var sdk = new Sdk({
+  workflowId: YOUR_CONFIG.workflowId,
+  secret: { privateKey: YOUR_SECRETS.privateKey },
+  endpoints: {
+    trace: 'https://trace-api.staging.stratumn.com',
+    account: 'https://account-api.staging.stratumn.com',
+    media: 'https://media-api.staging.stratumn.com'
+  }
+});
+```
 
 ### Creating a new trace
 
@@ -82,6 +95,7 @@ Notes:
 - You can view your forms detail from your group's Attestation Forms page (for ex `https://trace.stratumn.com/group/322547/forms`).
 - When viewing a specific form detail, you can retrieve the form id from the url. (`https://trace.stratumn.com/group/322547/form/788547` => `formId=788547`).
 - The `data` object argument must be valid against the JSON schema of the form you are using, otherwise Trace will throw a validation error.
+- Note that the return type of `sdk.newTrace` is `Promise<TraceState>` since this operation is asynchronous. You must `await` for the response in order to effectively use it.
 
 ### Appending a link to an existing trace
 
@@ -191,7 +205,7 @@ await sdk.rejectTransfer({
 });
 ```
 
-Alternatively, if you have initiated the transfer (push or pull), you can also cancel it:
+Alternatively, if you have initiated the transfer (push or pull), you can also before it has been accepted:
 
 ```js
 await sdk.cancelTransfer({
@@ -359,7 +373,7 @@ do {
 
 ### :floppy_disk: Handling files
 
-When providing a `data` object in an action (via `newTrace`, `appendLink` etc.), you can embed files that will automatically be uploaded for you. We provide two ways for embedding files, depending on the platform you app is running.
+When providing a `data` object in an action (via `newTrace`, `appendLink` etc.), you can embed files that will automatically be uploaded and encrypted for you. We provide two ways for embedding files, depending on the platform your app is running.
 
 In NodeJs, here is how you would do it:
 
@@ -403,12 +417,13 @@ var state = await sdk.appendLink({
 });
 ```
 
-Under the hood, all the files are uploaded first and the `FileWrapper` objects found in the data object are converted to a `FileRecord` object, that will look like this:
+Under the hood, all the files are encrypted and uploaded first and the `FileWrapper` objects found in the data object are converted to a `FileRecord` object, that will look like this:
 
 ```js
 {
   mimetype: 'image/png',
   digest: '1114c7455d6365dc5431c0a1c1388088b793fd8bdec7',
+  key: 'x/Qr55ABlruIU0E4FoE4iCP0tr4Y1EjCt6bb5iCaugs=',
   name: 'pic_ea15qw.png',
   size: 235899
 }
@@ -417,7 +432,7 @@ Under the hood, all the files are uploaded first and the `FileWrapper` objects f
 This record uniquely identifies the corresponding file in our service and is easily serializable. If you look in the `headLink` of the returned state, you will see that the `FileWrapper` have been converted to `FileRecord` types:
 
 ```js
-var data = state.headLink.data();
+var data = state.headLink.formData();
 
 console.log(data.customCertificates);
 
@@ -426,12 +441,14 @@ console.log(data.customCertificates);
 //   {
 //     mimetype: 'application/pdf',
 //     digest: '1114a1ec84cee50603eb285f2006c3b42279fd272d87',
+//     key: 'flBg5AAQI/MBGZnXGYEfuwCEexgkCrD1sXPCYqWvjyc=',
 //     name: 'certif_abc.pdf',
 //     size: 86726
 //   },
 //   {
 //     mimetype: 'image/png',
 //     digest: '1114c7455d6365dc5431c0a1c1388088b793fd8bdec7',
+//     key: 'x/Qr55ABlruIU0E4FoE4iCP0tr4Y1EjCt6bb5iCaugs=',
 //     name: 'pic_ea15qw.png',
 //     size: 235899
 //   }
@@ -445,17 +462,17 @@ var state = sdk.getTraceState({
   traceId: thePreviousTraceId
 });
 
-var dataWithRecords = state.headLink.data();
+var dataWithRecords = state.headLink.formData();
 
 var dataWithFiles = sdk.downloadFilesInObject(dataWithRecords);
 
 var [certif, pic] = dataWithFiles.customCertificates;
 
-consume(certif.data());
-consume(pic.data());
+consume(certif.decryptedData());
+consume(pic.decryptedData());
 ```
 
-In this case, `certif` and `pic` are `FileWrapper` objects from which you can extract the raw data (type `Buffer`).
+In this case, `certif` and `pic` are `FileWrapper` objects from which you can extract the raw decrypted data (type `Buffer`).
 
 ## :loudspeaker: Getting Help
 
