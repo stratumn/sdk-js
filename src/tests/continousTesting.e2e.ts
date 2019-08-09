@@ -106,26 +106,44 @@ it('continuous testing', async () => {
   expect(backlog.totalCount).toBeGreaterThanOrEqual(1);
   expect(backlog.traces[0].traceId).toEqual(firstRequest.traceId);
 
-  const { nodeJsFilePath } = fixtures.FileWrappers;
+  const { nodeJsFilePath, makeBrowserFile } = fixtures.FileWrappers;
+  const browserFile = makeBrowserFile();
   const secondResponse = await sdkBot2.appendLink({
     formId: formResponseId,
     traceId: secondRequest.traceId,
     data: {
       status: '200',
       body: 'OK. Files attached.',
-      attachments: [nodeJsFilePath]
+      attachments: [nodeJsFilePath, browserFile]
     }
   });
   const { attachments } = secondResponse.headLink.formData();
-  expect(attachments).toHaveLength(1);
+  expect(attachments).toHaveLength(2);
   expect(attachments).toEqual([
     {
       digest: expect.any(String),
+      key: expect.any(String),
       mimetype: 'image/png',
       name: 'stratumn.png',
       size: expect.any(Number)
+    },
+    {
+      digest: expect.any(String),
+      key: expect.any(String),
+      mimetype: 'txt',
+      name: 'novel.txt',
+      size: expect.any(Number)
     }
   ]);
+
+  const downloaded = await sdkBot2.downloadFilesInObject(
+    secondResponse.headLink.formData()
+  );
+  expect(downloaded.attachments).toHaveLength(2);
+  const decrypted = await downloaded.attachments[1].decryptedData();
+  const encrypted = await downloaded.attachments[1].encryptedData();
+  expect(decrypted.toString()).toEqual('my text file...');
+  expect(encrypted.toString()).not.toEqual('my text file...');
 
   const state = await sdkBot2.addTagsToTrace({
     traceId: firstRequest.traceId,

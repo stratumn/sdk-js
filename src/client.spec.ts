@@ -543,7 +543,7 @@ describe('Client', () => {
         return {
           ok: true,
           status: 200,
-          blob: async () => blob
+          buffer: async () => blob
         };
       });
     });

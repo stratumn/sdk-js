@@ -3,7 +3,6 @@
  */
 import { fixtures } from './fixtures';
 import { FileWrapper } from './fileWrapper';
-import { ReadStream } from 'fs';
 describe('fileWrapper', () => {
   const {
     makeBrowserFile,
@@ -14,27 +13,38 @@ describe('fileWrapper', () => {
   const browserFile = makeBrowserFile();
 
   it('NodeJs - FilePath', async () => {
-    expect(nodeJsFilePath.data()).toBeInstanceOf(ReadStream);
     expect(await nodeJsFilePath.info()).toEqual({
       mimetype: 'image/png',
       name: 'stratumn.png',
-      size: expect.any(Number)
+      size: expect.any(Number),
+      key: expect.any(String)
     });
   });
 
   it('NodeJs - Blob', async () => {
-    expect(nodeJsFileBlob.data()).toBeInstanceOf(Buffer);
     expect(await nodeJsFileBlob.info()).toEqual(obj);
   });
 
   it('Browser', async () => {
-    expect(browserFile.data()).toBeInstanceOf(File);
     expect(await browserFile.info()).toEqual({
       mimetype: 'txt',
       name: 'novel.txt',
-      size: expect.any(Number)
+      size: expect.any(Number),
+      key: expect.any(String)
     });
   });
+
+  it.each([['NodeJsFilePath', nodeJsFilePath], ['BrowserFile', browserFile]])(
+    'Encryption / Decryption : %s',
+    async (_name: string, obj: FileWrapper) => {
+      const encrypted = await obj.encryptedData();
+      const decrypted = await obj.decryptedData();
+      expect(encrypted).not.toEqual(decrypted);
+      const info = await obj.info();
+      const fileBlob = FileWrapper.fromNodeJsFileBlob(encrypted, info);
+      expect(await fileBlob.decryptedData()).toEqual(decrypted);
+    }
+  );
 
   it.each([
     ['NodeJsFilePath', nodeJsFilePath, true],

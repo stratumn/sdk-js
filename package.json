@@ -37,6 +37,7 @@
     "lodash.zip": "^4.2.0",
     "mime": "^2.4.4",
     "node-fetch": "^2.6.0",
+    "promise-file-reader": "^1.0.2",
     "querystring": "^0.2.0",
     "uuid": "^3.3.2"
   },

@@ -5,6 +5,7 @@ export interface FileInfo {
   mimetype: string;
   size: number;
   name: string;
+  key?: string;
 }
 
 /**

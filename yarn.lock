@@ -5171,6 +5171,10 @@ process-nextick-args@~2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/process-nextick-args/-/process-nextick-args-2.0.0.tgz#a37d732f4271b4ab1ad070d35508e8290788ffaa"
 
+promise-file-reader@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/promise-file-reader/-/promise-file-reader-1.0.2.tgz#1bb60cc10e58c97f8ae2dc31ccdf006bcdbf22ca"
+
 promise-inflight@^1.0.1, promise-inflight@~1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/promise-inflight/-/promise-inflight-1.0.1.tgz#98472870bf228132fcbdd868129bad12c3c029e3"

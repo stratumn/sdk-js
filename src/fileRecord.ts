@@ -10,14 +10,16 @@ export class FileRecord implements MediaRecord, FileInfo, Identifiable {
   name: string;
   mimetype: string;
   size: number;
+  key?: string;
 
   constructor(media: MediaRecord, info: FileInfo) {
     const { digest, name } = media;
-    const { mimetype, size } = info;
+    const { mimetype, size, key } = info;
     this.digest = digest;
     this.name = name;
     this.mimetype = mimetype;
     this.size = size;
+    this.key = key;
   }
 
   /**
