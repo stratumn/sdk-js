@@ -359,7 +359,7 @@ do {
 
 ### :floppy_disk: Handling files
 
-When providing a `data` object in an action (via `newTrace`, `appendLink` etc.), you can embed files that will automatically be uploaded for you. We provide two ways for embedding files, depending on the platform you app is running.
+When providing a `data` object in an action (via `newTrace`, `appendLink` etc.), you can embed files that will automatically be uploaded and encrypted for you. We provide two ways for embedding files, depending on the platform your app is running.
 
 In NodeJs, here is how you would do it:
 
@@ -403,12 +403,13 @@ var state = await sdk.appendLink({
 });
 ```
 
-Under the hood, all the files are uploaded first and the `FileWrapper` objects found in the data object are converted to a `FileRecord` object, that will look like this:
+Under the hood, all the files are encrypted and uploaded first and the `FileWrapper` objects found in the data object are converted to a `FileRecord` object, that will look like this:
 
 ```js
 {
   mimetype: 'image/png',
   digest: '1114c7455d6365dc5431c0a1c1388088b793fd8bdec7',
+  key: 'x/Qr55ABlruIU0E4FoE4iCP0tr4Y1EjCt6bb5iCaugs=',
   name: 'pic_ea15qw.png',
   size: 235899
 }
@@ -426,12 +427,14 @@ console.log(data.customCertificates);
 //   {
 //     mimetype: 'application/pdf',
 //     digest: '1114a1ec84cee50603eb285f2006c3b42279fd272d87',
+//     key: 'flBg5AAQI/MBGZnXGYEfuwCEexgkCrD1sXPCYqWvjyc=',
 //     name: 'certif_abc.pdf',
 //     size: 86726
 //   },
 //   {
 //     mimetype: 'image/png',
 //     digest: '1114c7455d6365dc5431c0a1c1388088b793fd8bdec7',
+//     key: 'x/Qr55ABlruIU0E4FoE4iCP0tr4Y1EjCt6bb5iCaugs=',
 //     name: 'pic_ea15qw.png',
 //     size: 235899
 //   }
@@ -451,11 +454,11 @@ var dataWithFiles = sdk.downloadFilesInObject(dataWithRecords);
 
 var [certif, pic] = dataWithFiles.customCertificates;
 
-consume(certif.data());
-consume(pic.data());
+consume(certif.decryptedData());
+consume(pic.decryptedData());
 ```
 
-In this case, `certif` and `pic` are `FileWrapper` objects from which you can extract the raw data (type `Buffer`).
+In this case, `certif` and `pic` are `FileWrapper` objects from which you can extract the raw decrypted data (type `Buffer`).
 
 ## :loudspeaker: Getting Help
 
