@@ -149,6 +149,12 @@ export namespace ConfigQuery {
         }
       }
       workflow: workflowByRowId(rowId: $workflowId) {
+        forms {
+          nodes {
+            formId: rowId
+            stageName
+          }
+        }
         groups {
           nodes {
             groupId: rowId
@@ -182,6 +188,12 @@ export namespace ConfigQuery {
       };
     };
     workflow: {
+      forms: {
+        nodes: {
+          formId: string;
+          stageName: string;
+        }[];
+      };
       groups: {
         nodes: {
           groupId: string;

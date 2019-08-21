@@ -166,6 +166,12 @@ export class Sdk<TState = any> {
         throw new Error('Cannot get signing private key');
       }
 
+      // extract action names
+      const actionNames: { [formId: string]: string } = {};
+      workflow.forms.nodes.forEach(f => {
+        actionNames[f.formId] = f.stageName;
+      });
+
       // store the new config
       this.config = {
         workflowId,
@@ -173,6 +179,7 @@ export class Sdk<TState = any> {
         accountId,
         groupId,
         ownerId,
+        actionNames,
         signingPrivateKey
       };
 
@@ -462,7 +469,13 @@ export class Sdk<TState = any> {
     const { data, formId } = input;
 
     // extract info from config
-    const { workflowId, userId, ownerId, groupId } = await this.getConfig();
+    const {
+      workflowId,
+      userId,
+      ownerId,
+      groupId,
+      actionNames
+    } = await this.getConfig();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -473,7 +486,7 @@ export class Sdk<TState = any> {
       workflowId
     })
       // this is an attestation
-      .forAttestation(formId, dataAfterFileUpload)
+      .forAttestation(formId, actionNames[formId], dataAfterFileUpload)
       // add owner info
       .withOwner(ownerId)
       // add group info
@@ -524,7 +537,13 @@ export class Sdk<TState = any> {
     const { data, formId } = input;
 
     // extract info from config
-    const { workflowId, userId, ownerId, groupId } = await this.getConfig();
+    const {
+      workflowId,
+      userId,
+      ownerId,
+      groupId,
+      actionNames
+    } = await this.getConfig();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -537,7 +556,7 @@ export class Sdk<TState = any> {
       parentLink
     })
       // this is an attestation
-      .forAttestation(formId, dataAfterFileUpload)
+      .forAttestation(formId, actionNames[formId], dataAfterFileUpload)
       // add owner info
       .withOwner(ownerId)
       // add group info
