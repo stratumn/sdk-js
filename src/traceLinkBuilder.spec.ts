@@ -29,7 +29,7 @@ describe('TraceLinkBuilder', () => {
   beforeEach(() => {
     mockUuid.mockReturnValue(traceId as any);
     builder = new TraceLinkBuilder({ workflowId })
-      .forAttestation(formId, data)
+      .forAttestation(formId, 'action', data)
       .withOwner(ownerId)
       .withGroup(groupId)
       .withCreatedBy(createdById);
@@ -62,7 +62,7 @@ describe('TraceLinkBuilder', () => {
 
   it('forAttestation', () => {
     const link = builder.build();
-    const expectedAction: TraceActionType = '_ATTESTATION_';
+    const expectedAction: string = 'action';
     const expectedType: TraceLinkType = 'OWNED';
     expect(link.formData()).toEqual(data);
     expect(link.data()).toEqual(hashedData);

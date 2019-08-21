@@ -104,13 +104,13 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
    * User must still set owner, group and createdBy separately.
    *
    * @param formId the form id used for the attestation
+   * @param action the name of the action associated with the form
    * @param data the data of the attestation
    */
-  public forAttestation(formId: string, data: TLinkData) {
-    const action: TraceActionType = '_ATTESTATION_';
+  public forAttestation(formId: string, action: string, data: TLinkData) {
     const type: TraceLinkType = 'OWNED';
     this.withHashedData(data)
-      .withAction(action)
+      .withAction(action || 'Attestation')
       .withProcessState(type);
     this.metadata.formId = formId;
     return this;

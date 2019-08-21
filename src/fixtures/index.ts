@@ -108,6 +108,9 @@ export namespace fixtures {
         }
       },
       workflow: {
+        forms: {
+          nodes: [{ formId: '123', stageName: 'the action' }]
+        },
         groups: {
           nodes: [{ accountId: '123', groupId: '887' }]
         }
