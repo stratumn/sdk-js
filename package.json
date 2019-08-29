@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@stratumn/canonicaljson": "^1.0.3",
-    "@stratumn/js-chainscript": "^1.0.7",
+    "@stratumn/js-chainscript": "^1.0.8",
     "@stratumn/js-crypto": "^1.4.0",
     "async-mutex": "^0.1.3",
     "await-to-js": "^2.1.1",
