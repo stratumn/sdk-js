@@ -433,7 +433,6 @@ This record uniquely identifies the corresponding file in our service and is eas
 
 ```js
 var data = state.headLink.formData();
-
 console.log(data.customCertificates);
 
 // will output:
