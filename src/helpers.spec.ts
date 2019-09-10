@@ -136,6 +136,11 @@ describe('extractObjects / assignObjects', () => {
     expected: new Map([])
   };
 
+  const nullObject = {
+    value: null,
+    expected: new Map([])
+  };
+
   /**
    * Test that the FileWrapper objects are extracted correctly.
    */
@@ -143,7 +148,8 @@ describe('extractObjects / assignObjects', () => {
     ['nested object', nestedObject],
     ['array', array],
     ['object with no file', noFile],
-    ['undefined', undefinedObject]
+    ['undefined', undefinedObject],
+    ['null', nullObject]
   ])('extract file wrappers from %s', (_name, testObject) => {
     const { idToObjectMap, pathToIdMap } = extractFileWrappers(
       testObject.value
