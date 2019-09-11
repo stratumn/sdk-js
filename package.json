@@ -1,6 +1,6 @@
 {
   "name": "@stratumn/sdk",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Stratumn Sdk for JavaScript",
   "repository": "git@github.com:stratumn/sdk-js.git",
   "author": "Stratumn Team",
