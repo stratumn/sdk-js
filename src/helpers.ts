@@ -105,7 +105,7 @@ const extractObjectsImpl = <T, V extends Identifiable>(
         reviver
       );
     });
-  } else if (typeof data === 'object') {
+  } else if (data && typeof data === 'object') {
     // if it is an object, iterate through each entry
     // and extract objects recursively
     for (const [key, value] of Object.entries(data)) {
