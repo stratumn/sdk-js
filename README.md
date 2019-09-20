@@ -484,3 +484,4 @@ In this case, `certif` and `pic` are `FileWrapper` objects from which you can ex
 This SDK is distributed under the
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0),
 see LICENSE.txt for more information.
+
