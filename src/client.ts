@@ -76,6 +76,11 @@ export class Client {
   private mutex: Mutex;
 
   /**
+   * enable request and response logging
+   */
+  private enableDebugging?: boolean;
+
+  /**
    * Constructs a new instance of the Client
    * @param opts the client options
    */
@@ -83,6 +88,7 @@ export class Client {
     this.endpoints = makeEndpoints(opts.endpoints);
     this.secret = opts.secret;
     this.mutex = new Mutex();
+    this.enableDebugging = opts.enableDebugging;
   }
 
   /*********************************************************
@@ -396,6 +402,14 @@ export class Client {
     // compile the trace graphql endpoint url to use
     const gqlUrl = new URL('graphql', this.endpoints.trace).toString();
 
+    if (this.enableDebugging) {
+      console.log(
+        '======================= GraphQL Request ======================='
+      );
+      console.log(query);
+      console.log(variables);
+    }
+
     // delegate the graphql request execution
     const [err, rsp] = await to<T, ClientError>(
       graphqlRequest<T>(
@@ -405,6 +419,14 @@ export class Client {
         variables
       )
     );
+
+    if (this.enableDebugging) {
+      console.log(
+        '======================= GraphQL Response ======================='
+      );
+      console.log(rsp);
+      if (err) console.log(err);
+    }
 
     const { retry } = opts || defaultGraphQLOptions;
 
