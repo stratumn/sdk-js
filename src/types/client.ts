@@ -92,6 +92,12 @@ export interface ClientOptions {
    * Can be a signing key or a username + password.
    */
   secret: Secret;
+
+  /**
+   * This option is used to add request and response logging
+   * for debugging purposes
+   */
+  enableDebugging?: boolean;
 }
 
 /**
