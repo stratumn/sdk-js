@@ -460,6 +460,48 @@ input Account_DatetimeFilter {
   greaterThanOrEqualTo: Account_Datetime
 }
 
+"""
+A filter to be used against Int fields. All fields are combined with a logical ‘and.’
+"""
+input Account_IntFilter {
+  """
+  Is null (if `true` is specified) or is not null (if `false` is specified).
+  """
+  isNull: Boolean
+
+  """Equal to the specified value."""
+  equalTo: Int
+
+  """Not equal to the specified value."""
+  notEqualTo: Int
+
+  """
+  Not equal to the specified value, treating null like an ordinary value.
+  """
+  distinctFrom: Int
+
+  """Equal to the specified value, treating null like an ordinary value."""
+  notDistinctFrom: Int
+
+  """Included in the specified list."""
+  in: [Int!]
+
+  """Not included in the specified list."""
+  notIn: [Int!]
+
+  """Less than the specified value."""
+  lessThan: Int
+
+  """Less than or equal to the specified value."""
+  lessThanOrEqualTo: Int
+
+  """Greater than the specified value."""
+  greaterThan: Int
+
+  """Greater than or equal to the specified value."""
+  greaterThanOrEqualTo: Int
+}
+
 """A signing key."""
 type Account_Key implements Account_Node {
   """
@@ -562,79 +604,10 @@ type Account_Key implements Account_Node {
     filter: Account_AccountFilter
   ): Account_AccountsConnection!
 
-  """Reads and enables pagination through a set of `SharedKey`."""
-  entityKeys(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Account_Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Account_Cursor
-
-    """The method to use when ordering `SharedKey`."""
-    orderBy: [Account_SharedKeysOrderBy!] = [PRIMARY_KEY_ASC]
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: Account_SharedKeyCondition
-
-    """
-    A filter to be used in determining which values should be returned by the collection.
-    """
-    filter: Account_SharedKeyFilter
-  ): Account_SharedKeysConnection!
-
-  """Reads and enables pagination through a set of `SharedKey`."""
-  sharedVersions(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Account_Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Account_Cursor
-
-    """The method to use when ordering `SharedKey`."""
-    orderBy: [Account_SharedKeysOrderBy!] = [PRIMARY_KEY_ASC]
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: Account_SharedKeyCondition
-
-    """
-    A filter to be used in determining which values should be returned by the collection.
-    """
-    filter: Account_SharedKeyFilter
-  ): Account_SharedKeysConnection!
-
   """Reads a single `PrivateKey` that is related to this `Key`."""
   privateKey: Account_PrivateKey
   canSelect: Boolean
   canUpdate: Boolean
-  userSharedKey: Account_SharedKey
 }
 
 """
@@ -808,6 +781,17 @@ type Account_Member {
   """Is the user an admin of the account."""
   admin: Boolean
 
+  """
+  Whether or not the user is a collaborator (i.e. external to the organization)
+  """
+  collaborator: Boolean
+
+  """The email address of the user."""
+  email: String
+
+  """The name of the user."""
+  name: String
+
   """The user entity behind the member."""
   user: Account_User
 }
@@ -827,6 +811,15 @@ input Account_MemberFilter {
 
   """Filter by the object’s `admin` field."""
   admin: Account_BooleanFilter
+
+  """Filter by the object’s `collaborator` field."""
+  collaborator: Account_BooleanFilter
+
+  """Filter by the object’s `email` field."""
+  email: Account_StringFilter
+
+  """Filter by the object’s `name` field."""
+  name: Account_StringFilter
 
   """Checks for all expressions in this list."""
   and: [Account_MemberFilter!]
@@ -903,6 +896,19 @@ type Account_Organization implements Account_Node {
   """The time when the team was last updated."""
   updatedAt: Account_Datetime!
 
+  """The amount of purchased seats for an organization."""
+  seats: Int
+
+  """
+  The amount of purchased group administrator licenses for an organization.
+  """
+  groupAdministratorLicenses: Int
+
+  """
+  The amount of purchased organization owner licenses for an organization.
+  """
+  organizationOwnerLicenses: Int
+
   """Reads a single `Account` that is related to this `Organization`."""
   account: Account_Account
 
@@ -943,9 +949,7 @@ type Account_Organization implements Account_Node {
   canSelect: Boolean
   canUpdate: Boolean
 
-  """
-  Returns a list of `User`s who are collaborators of the `Organization`.
-  """
+  """Returns a list of `User`s who are collaborators of the `Organization`."""
   collaborators(
     """Only read the first `n` values of the set."""
     first: Int
@@ -970,6 +974,15 @@ type Account_Organization implements Account_Node {
     """
     filter: Account_UserFilter
   ): Account_UsersConnection!
+
+  """The amount of group administrator licenses left for an organization."""
+  groupAdministratorLicensesLeft: Int
+
+  """The amount of organization owner licenses left for an organization."""
+  organizationOwnerLicensesLeft: Int
+
+  """The amount of seats left for an organization."""
+  seatsLeft: Int
 }
 
 """
@@ -1000,6 +1013,19 @@ input Account_OrganizationCondition {
 
   """Checks for equality with the object’s `updatedAt` field."""
   updatedAt: Account_Datetime
+
+  """Checks for equality with the object’s `seats` field."""
+  seats: Int
+
+  """
+  Checks for equality with the object’s `groupAdministratorLicenses` field.
+  """
+  groupAdministratorLicenses: Int
+
+  """
+  Checks for equality with the object’s `organizationOwnerLicenses` field.
+  """
+  organizationOwnerLicenses: Int
 }
 
 """
@@ -1030,6 +1056,15 @@ input Account_OrganizationFilter {
   """Filter by the object’s `updatedAt` field."""
   updatedAt: Account_DatetimeFilter
 
+  """Filter by the object’s `seats` field."""
+  seats: Account_IntFilter
+
+  """Filter by the object’s `groupAdministratorLicenses` field."""
+  groupAdministratorLicenses: Account_IntFilter
+
+  """Filter by the object’s `organizationOwnerLicenses` field."""
+  organizationOwnerLicenses: Account_IntFilter
+
   """Filter by the object’s `canInsert` field."""
   canInsert: Account_BooleanFilter
 
@@ -1038,6 +1073,15 @@ input Account_OrganizationFilter {
 
   """Filter by the object’s `canUpdate` field."""
   canUpdate: Account_BooleanFilter
+
+  """Filter by the object’s `groupAdministratorLicensesLeft` field."""
+  groupAdministratorLicensesLeft: Account_IntFilter
+
+  """Filter by the object’s `organizationOwnerLicensesLeft` field."""
+  organizationOwnerLicensesLeft: Account_IntFilter
+
+  """Filter by the object’s `seatsLeft` field."""
+  seatsLeft: Account_IntFilter
 
   """Checks for all expressions in this list."""
   and: [Account_OrganizationFilter!]
@@ -1094,6 +1138,12 @@ enum Account_OrganizationsOrderBy {
   CREATED_AT_DESC
   UPDATED_AT_ASC
   UPDATED_AT_DESC
+  SEATS_ASC
+  SEATS_DESC
+  GROUP_ADMINISTRATOR_LICENSES_ASC
+  GROUP_ADMINISTRATOR_LICENSES_DESC
+  ORGANIZATION_OWNER_LICENSES_ASC
+  ORGANIZATION_OWNER_LICENSES_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
 }
@@ -1138,117 +1188,6 @@ type Account_PrivateKey implements Account_Node {
   """Decrypted PEM encoded private key"""
   decrypted: String
   owner: Account_Account
-}
-
-"""Shared versions of a private key"""
-type Account_SharedKey implements Account_Node {
-  """
-  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
-  """
-  id: ID!
-
-  """Id of the shared key"""
-  rowId: Account_BigInt!
-
-  """Id of the key used to encrypt the shared key"""
-  userKeyId: Account_BigInt!
-
-  """Id of the key that is shared"""
-  keyId: Account_BigInt!
-
-  """Encrypted version of the shared private key"""
-  encryptedSharedKey: String!
-
-  """Reads a single `Key` that is related to this `SharedKey`."""
-  userKey: Account_Key
-
-  """Reads a single `Key` that is related to this `SharedKey`."""
-  key: Account_Key
-}
-
-"""
-A condition to be used against `SharedKey` object types. All fields are tested
-for equality and combined with a logical ‘and.’
-"""
-input Account_SharedKeyCondition {
-  """Checks for equality with the object’s `rowId` field."""
-  rowId: Account_BigInt
-
-  """Checks for equality with the object’s `userKeyId` field."""
-  userKeyId: Account_BigInt
-
-  """Checks for equality with the object’s `keyId` field."""
-  keyId: Account_BigInt
-
-  """Checks for equality with the object’s `encryptedSharedKey` field."""
-  encryptedSharedKey: String
-}
-
-"""
-A filter to be used against `SharedKey` object types. All fields are combined with a logical ‘and.’
-"""
-input Account_SharedKeyFilter {
-  """Filter by the object’s `rowId` field."""
-  rowId: Account_BigIntFilter
-
-  """Filter by the object’s `userKeyId` field."""
-  userKeyId: Account_BigIntFilter
-
-  """Filter by the object’s `keyId` field."""
-  keyId: Account_BigIntFilter
-
-  """Filter by the object’s `encryptedSharedKey` field."""
-  encryptedSharedKey: Account_StringFilter
-
-  """Checks for all expressions in this list."""
-  and: [Account_SharedKeyFilter!]
-
-  """Checks for any expressions in this list."""
-  or: [Account_SharedKeyFilter!]
-
-  """Negates the expression."""
-  not: Account_SharedKeyFilter
-}
-
-"""A connection to a list of `SharedKey` values."""
-type Account_SharedKeysConnection {
-  """A list of `SharedKey` objects."""
-  nodes: [Account_SharedKey]!
-
-  """
-  A list of edges which contains the `SharedKey` and cursor to aid in pagination.
-  """
-  edges: [Account_SharedKeysEdge!]!
-
-  """Information to aid in pagination."""
-  pageInfo: Account_PageInfo!
-
-  """The count of *all* `SharedKey` you could get from the connection."""
-  totalCount: Int
-}
-
-"""A `SharedKey` edge in the connection."""
-type Account_SharedKeysEdge {
-  """A cursor for use in pagination."""
-  cursor: Account_Cursor
-
-  """The `SharedKey` at the end of the edge."""
-  node: Account_SharedKey
-}
-
-"""Methods to use when ordering `SharedKey`."""
-enum Account_SharedKeysOrderBy {
-  NATURAL
-  ID_ASC
-  ID_DESC
-  USER_KEY_ID_ASC
-  USER_KEY_ID_DESC
-  KEY_ID_ASC
-  KEY_ID_DESC
-  ENCRYPTED_SHARED_KEY_ASC
-  ENCRYPTED_SHARED_KEY_DESC
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
 }
 
 """
@@ -1538,9 +1477,6 @@ type Account_User implements Account_Node {
   """User email"""
   email: String!
 
-  """User first name and last name"""
-  name: String!
-
   """User phone number"""
   phone: String
 
@@ -1559,6 +1495,12 @@ type Account_User implements Account_Node {
   """The time when the user was last updated."""
   updatedAt: Account_Datetime!
   pending: Boolean
+
+  """The first name of the user."""
+  firstName: String
+
+  """The last name of the user."""
+  lastName: String
 
   """Reads a single `Account` that is related to this `User`."""
   account: Account_Account
@@ -1590,6 +1532,9 @@ type Account_User implements Account_Node {
     """
     filter: Account_AccountFilter
   ): Account_AccountsConnection!
+
+  """The first name and last name concatenated together."""
+  name: String!
 
   """The organizations to which the user belongs."""
   organizations(
@@ -1654,9 +1599,6 @@ input Account_UserCondition {
   """Checks for equality with the object’s `email` field."""
   email: String
 
-  """Checks for equality with the object’s `name` field."""
-  name: String
-
   """Checks for equality with the object’s `phone` field."""
   phone: String
 
@@ -1677,6 +1619,12 @@ input Account_UserCondition {
 
   """Checks for equality with the object’s `pending` field."""
   pending: Boolean
+
+  """Checks for equality with the object’s `firstName` field."""
+  firstName: String
+
+  """Checks for equality with the object’s `lastName` field."""
+  lastName: String
 }
 
 """
@@ -1688,9 +1636,6 @@ input Account_UserFilter {
 
   """Filter by the object’s `email` field."""
   email: Account_StringFilter
-
-  """Filter by the object’s `name` field."""
-  name: Account_StringFilter
 
   """Filter by the object’s `phone` field."""
   phone: Account_StringFilter
@@ -1713,11 +1658,20 @@ input Account_UserFilter {
   """Filter by the object’s `pending` field."""
   pending: Account_BooleanFilter
 
+  """Filter by the object’s `firstName` field."""
+  firstName: Account_StringFilter
+
+  """Filter by the object’s `lastName` field."""
+  lastName: Account_StringFilter
+
   """Filter by the object’s `canInsert` field."""
   canInsert: Account_BooleanFilter
 
   """Filter by the object’s `canUpdate` field."""
   canUpdate: Account_BooleanFilter
+
+  """Filter by the object’s `name` field."""
+  name: Account_StringFilter
 
   """Checks for all expressions in this list."""
   and: [Account_UserFilter!]
@@ -1762,8 +1716,6 @@ enum Account_UsersOrderBy {
   ID_DESC
   EMAIL_ASC
   EMAIL_DESC
-  NAME_ASC
-  NAME_DESC
   PHONE_ASC
   PHONE_DESC
   AVATAR_ASC
@@ -1778,8 +1730,106 @@ enum Account_UsersOrderBy {
   UPDATED_AT_DESC
   PENDING_ASC
   PENDING_DESC
+  FIRST_NAME_ASC
+  FIRST_NAME_DESC
+  LAST_NAME_ASC
+  LAST_NAME_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
+}
+
+type Action {
+  """The identifier of the action"""
+  key: String!
+
+  """The form associated to the action"""
+  form: ActionForm
+
+  """The icon attached to the action"""
+  icon: String
+
+  """The effects performed by the action"""
+  effects: JSON
+
+  """The name of the stage of the action"""
+  stageName: String
+
+  """The description of the action"""
+  description: String
+  title: String
+
+  """Is the current user allowed to use this action"""
+  canUse: Boolean
+}
+
+"""
+A filter to be used against `Action` object types. All fields are combined with a logical ‘and.’
+"""
+input ActionFilter {
+  """Filter by the object’s `key` field."""
+  key: StringFilter
+
+  """Filter by the object’s `icon` field."""
+  icon: StringFilter
+
+  """Filter by the object’s `effects` field."""
+  effects: JSONFilter
+
+  """Filter by the object’s `stageName` field."""
+  stageName: StringFilter
+
+  """Filter by the object’s `description` field."""
+  description: StringFilter
+
+  """Filter by the object’s `title` field."""
+  title: StringFilter
+
+  """Filter by the object’s `canUse` field."""
+  canUse: BooleanFilter
+
+  """Checks for all expressions in this list."""
+  and: [ActionFilter!]
+
+  """Checks for any expressions in this list."""
+  or: [ActionFilter!]
+
+  """Negates the expression."""
+  not: ActionFilter
+}
+
+"""The form associated to an action"""
+type ActionForm {
+  """The JSON schema of the form"""
+  schema: JSON
+
+  """The UI schema of the form"""
+  uiSchema: JSON
+}
+
+"""A connection to a list of `Action` values."""
+type ActionsConnection {
+  """A list of `Action` objects."""
+  nodes: [Action]!
+
+  """
+  A list of edges which contains the `Action` and cursor to aid in pagination.
+  """
+  edges: [ActionsEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Action` you could get from the connection."""
+  totalCount: Int!
+}
+
+"""A `Action` edge in the connection."""
+type ActionsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Action` at the end of the edge."""
+  node: Action
 }
 
 """All input for the `addTagsToTrace` mutation."""
@@ -1813,7 +1863,7 @@ type AddTagsToTracePayload {
   """An edge for our `Trace`. May be used by Relay 1."""
   traceEdge(
     """The method to use when ordering `Trace`."""
-    orderBy: [TracesOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [TracesOrderBy!] = [PRIMARY_KEY_ASC]
   ): TracesEdge
 }
 
@@ -1848,7 +1898,7 @@ type ArchiveTracePayload {
   """An edge for our `Trace`. May be used by Relay 1."""
   traceEdge(
     """The method to use when ordering `Trace`."""
-    orderBy: [TracesOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [TracesOrderBy!] = [PRIMARY_KEY_ASC]
   ): TracesEdge
 }
 
@@ -1880,24 +1930,23 @@ type ArchiveWorkflowPayload {
   """An edge for our `Workflow`. May be used by Relay 1."""
   workflowEdge(
     """The method to use when ordering `Workflow`."""
-    orderBy: [WorkflowsOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [WorkflowsOrderBy!] = [PRIMARY_KEY_ASC]
   ): WorkflowsEdge
 }
 
-"""All input for the `assignFormToGroup` mutation."""
-input AssignFormToGroupInput {
+"""All input for the `assignActionToGroup` mutation."""
+input AssignActionToGroupInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
   groupId: BigInt
-  formId: BigInt
-  formIdentifier: BigInt
+  actionKey: String
 }
 
-"""The output of our `assignFormToGroup` mutation."""
-type AssignFormToGroupPayload {
+"""The output of our `assignActionToGroup` mutation."""
+type AssignActionToGroupPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
@@ -1916,7 +1965,7 @@ type AssignFormToGroupPayload {
   """An edge for our `Group`. May be used by Relay 1."""
   groupEdge(
     """The method to use when ordering `Group`."""
-    orderBy: [GroupsOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [GroupsOrderBy!] = [PRIMARY_KEY_ASC]
   ): GroupsEdge
 }
 
@@ -1926,7 +1975,7 @@ enum AttestationType {
 }
 
 """
-A signed eight-byte integer. The upper big integer values are greater then the
+A signed eight-byte integer. The upper big integer values are greater than the
 max value for a JavaScript number. Therefore all big integers will be output as
 strings and not numbers.
 """
@@ -2079,65 +2128,23 @@ input BooleanFilter {
   greaterThanOrEqualTo: Boolean
 }
 
-"""All input for the create `Form` mutation."""
-input CreateFormInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-
-  """The `Form` to be created by this mutation."""
-  form: FormInput!
-}
-
-"""The output of our create `Form` mutation."""
-type CreateFormPayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-
-  """The `Form` that was created by this mutation."""
-  form: Form
-
-  """
-  Our root query field type. Allows us to run any query from our mutation payload.
-  """
-  query: Query
-
-  """Reads a single `Workflow` that is related to this `Form`."""
-  workflow: Workflow
-
-  """An edge for our `Form`. May be used by Relay 1."""
-  formEdge(
-    """The method to use when ordering `Form`."""
-    orderBy: [FormsOrderBy!] = PRIMARY_KEY_ASC
-  ): FormsEdge
-}
-
-"""All input for the create `Group` mutation."""
+"""All input for the `createGroup` mutation."""
 input CreateGroupInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-
-  """The `Group` to be created by this mutation."""
-  group: GroupInput!
+  group: GroupInputRecordInput
 }
 
-"""The output of our create `Group` mutation."""
+"""The output of our `createGroup` mutation."""
 type CreateGroupPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
-
-  """The `Group` that was created by this mutation."""
   group: Group
 
   """
@@ -2151,7 +2158,7 @@ type CreateGroupPayload {
   """An edge for our `Group`. May be used by Relay 1."""
   groupEdge(
     """The method to use when ordering `Group`."""
-    orderBy: [GroupsOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [GroupsOrderBy!] = [PRIMARY_KEY_ASC]
   ): GroupsEdge
 }
 
@@ -2181,27 +2188,23 @@ type CreateLinksPayload {
   links: [Link!]
 }
 
-"""All input for the create `Workflow` mutation."""
+"""All input for the `createWorkflow` mutation."""
 input CreateWorkflowInput {
   """
   An arbitrary string value with no semantic meaning. Will be included in the
   payload verbatim. May be used to track mutations by the client.
   """
   clientMutationId: String
-
-  """The `Workflow` to be created by this mutation."""
-  workflow: WorkflowInput!
+  workflow: WorkflowInputRecordInput
 }
 
-"""The output of our create `Workflow` mutation."""
+"""The output of our `createWorkflow` mutation."""
 type CreateWorkflowPayload {
   """
   The exact same `clientMutationId` that was provided in the mutation input,
   unchanged and unused. May be used by a client to track mutations.
   """
   clientMutationId: String
-
-  """The `Workflow` that was created by this mutation."""
   workflow: Workflow
 
   """
@@ -2212,7 +2215,7 @@ type CreateWorkflowPayload {
   """An edge for our `Workflow`. May be used by Relay 1."""
   workflowEdge(
     """The method to use when ordering `Workflow`."""
-    orderBy: [WorkflowsOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [WorkflowsOrderBy!] = [PRIMARY_KEY_ASC]
   ): WorkflowsEdge
 }
 
@@ -2300,7 +2303,7 @@ type EditGroupMembershipPayload {
   """An edge for our `Group`. May be used by Relay 1."""
   groupEdge(
     """The method to use when ordering `Group`."""
-    orderBy: [GroupsOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [GroupsOrderBy!] = [PRIMARY_KEY_ASC]
   ): GroupsEdge
 }
 
@@ -2340,20 +2343,8 @@ type EditWorkflowMembershipPayload {
   """An edge for our `Workflow`. May be used by Relay 1."""
   workflowEdge(
     """The method to use when ordering `Workflow`."""
-    orderBy: [WorkflowsOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [WorkflowsOrderBy!] = [PRIMARY_KEY_ASC]
   ): WorkflowsEdge
-}
-
-"""Decryption information for a user/team/orga"""
-input EncryptionRecipients {
-  """The public key ID with which the symmetric key has been encrypted"""
-  pubKeyId: BigInt!
-
-  """The public key with which the symmetric key has been encrypted"""
-  pubKey: String!
-
-  """The encrypted symmetric key used to encrypt the link's data"""
-  symmetricKey: String!
 }
 
 """
@@ -2430,7 +2421,7 @@ type EvidencesConnection {
   pageInfo: PageInfo!
 
   """The count of *all* `Evidence` you could get from the connection."""
-  totalCount: Int
+  totalCount: Int!
 }
 
 """A `Evidence` edge in the connection."""
@@ -2484,131 +2475,51 @@ input FloatFilter {
   greaterThanOrEqualTo: Float
 }
 
-"""A Trace form."""
-type Form implements Node {
-  """
-  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
-  """
-  id: ID!
-
+type Form {
   """The id of the form."""
-  rowId: BigInt!
+  rowId: BigInt
 
   """The name of the stage of the form."""
-  stageName: String!
+  stageName: String
 
   """The title of the form."""
-  title: String!
+  title: String
 
   """The description of the form."""
   description: String
 
   """The JSON schema of the form."""
-  schema: JSON!
+  schema: JSON
 
   """The UI schema of the form."""
-  uiSchema: JSON!
+  uiSchema: JSON
 
   """Flags if the form has been used at least once."""
-  isUsed: Boolean!
+  isUsed: Boolean
 
   """The icon attached to the form."""
-  icon: String!
+  icon: String
 
   """The time when the form was created."""
-  createdAt: Datetime!
+  createdAt: Datetime
 
   """The time when the form was last updated."""
-  updatedAt: Datetime!
+  updatedAt: Datetime
 
   """The id of the workflow the form belongs to."""
-  workflowId: BigInt!
+  workflowId: BigInt
 
   """The version number of the form."""
-  version: BigInt!
+  version: BigInt
 
   """Denotes whether or not this is the active version of the form."""
-  active: Boolean!
+  active: Boolean
 
   """The identifier shared across all versions of a form."""
-  identifier: BigInt!
-
-  """Reads a single `Workflow` that is related to this `Form`."""
-  workflow: Workflow
-
-  """Reads and enables pagination through a set of `Link`."""
-  links(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """The method to use when ordering `Link`."""
-    orderBy: [LinksOrderBy!] = [PRIMARY_KEY_ASC]
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: LinkCondition
-
-    """
-    A filter to be used in determining which values should be returned by the collection.
-    """
-    filter: LinkFilter
-  ): LinksConnection!
-
-  """Reads and enables pagination through a set of `Stage`."""
-  stages(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """Only read the last `n` values of the set."""
-    last: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """Read all values in the set before (above) this cursor."""
-    before: Cursor
-
-    """Read all values in the set after (below) this cursor."""
-    after: Cursor
-
-    """The method to use when ordering `Stage`."""
-    orderBy: [StagesOrderBy!] = [PRIMARY_KEY_ASC]
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: StageCondition
-
-    """
-    A filter to be used in determining which values should be returned by the collection.
-    """
-    filter: StageFilter
-  ): StagesConnection!
-
-  """Is the current user allowed to update this form."""
-  canUpdate: Boolean
+  identifier: BigInt
 
   """Is the current user allowed to use this form."""
-  canUse: Boolean
+  canUse: Boolean @deprecated(reason: "Use actions instead")
 
   """Groups which can use this form."""
   groups(
@@ -2634,54 +2545,11 @@ type Form implements Node {
     A filter to be used in determining which values should be returned by the collection.
     """
     filter: GroupFilter
-  ): GroupsConnection!
-}
+  ): GroupsConnection! @deprecated(reason: "Use action.groups instead")
 
-"""
-A condition to be used against `Form` object types. All fields are tested for equality and combined with a logical ‘and.’
-"""
-input FormCondition {
-  """Checks for equality with the object’s `rowId` field."""
-  rowId: BigInt
-
-  """Checks for equality with the object’s `stageName` field."""
-  stageName: String
-
-  """Checks for equality with the object’s `title` field."""
-  title: String
-
-  """Checks for equality with the object’s `description` field."""
-  description: String
-
-  """Checks for equality with the object’s `schema` field."""
-  schema: JSON
-
-  """Checks for equality with the object’s `uiSchema` field."""
-  uiSchema: JSON
-
-  """Checks for equality with the object’s `isUsed` field."""
-  isUsed: Boolean
-
-  """Checks for equality with the object’s `icon` field."""
-  icon: String
-
-  """Checks for equality with the object’s `createdAt` field."""
-  createdAt: Datetime
-
-  """Checks for equality with the object’s `updatedAt` field."""
-  updatedAt: Datetime
-
-  """Checks for equality with the object’s `workflowId` field."""
-  workflowId: BigInt
-
-  """Checks for equality with the object’s `version` field."""
-  version: BigInt
-
-  """Checks for equality with the object’s `active` field."""
-  active: Boolean
-
-  """Checks for equality with the object’s `identifier` field."""
-  identifier: BigInt
+  """The workflow of the form."""
+  workflow: Workflow @deprecated(reason: "Use action.workflow instead")
+  id: ID!
 }
 
 """
@@ -2730,9 +2598,6 @@ input FormFilter {
   """Filter by the object’s `identifier` field."""
   identifier: BigIntFilter
 
-  """Filter by the object’s `canUpdate` field."""
-  canUpdate: BooleanFilter
-
   """Filter by the object’s `canUse` field."""
   canUse: BooleanFilter
 
@@ -2744,40 +2609,6 @@ input FormFilter {
 
   """Negates the expression."""
   not: FormFilter
-}
-
-"""An input for mutations affecting `Form`"""
-input FormInput {
-  """The name of the stage of the form."""
-  stageName: String!
-
-  """The title of the form."""
-  title: String!
-
-  """The description of the form."""
-  description: String
-
-  """The JSON schema of the form."""
-  schema: JSON!
-
-  """The UI schema of the form."""
-  uiSchema: JSON!
-
-  """The icon attached to the form."""
-  icon: String
-
-  """The id of the workflow the form belongs to."""
-  workflowId: BigInt!
-}
-
-"""An input for mutations affecting `FormPatchRecord`"""
-input FormPatchRecordInput {
-  stageName: String
-  title: String
-  description: String
-  schema: JSON
-  uiSchema: JSON
-  icon: String
 }
 
 """A connection to a list of `Form` values."""
@@ -2794,7 +2625,7 @@ type FormsConnection {
   pageInfo: PageInfo!
 
   """The count of *all* `Form` you could get from the connection."""
-  totalCount: Int
+  totalCount: Int!
 }
 
 """A `Form` edge in the connection."""
@@ -2804,41 +2635,6 @@ type FormsEdge {
 
   """The `Form` at the end of the edge."""
   node: Form
-}
-
-"""Methods to use when ordering `Form`."""
-enum FormsOrderBy {
-  NATURAL
-  ID_ASC
-  ID_DESC
-  STAGE_NAME_ASC
-  STAGE_NAME_DESC
-  TITLE_ASC
-  TITLE_DESC
-  DESCRIPTION_ASC
-  DESCRIPTION_DESC
-  SCHEMA_ASC
-  SCHEMA_DESC
-  UI_SCHEMA_ASC
-  UI_SCHEMA_DESC
-  IS_USED_ASC
-  IS_USED_DESC
-  ICON_ASC
-  ICON_DESC
-  CREATED_AT_ASC
-  CREATED_AT_DESC
-  UPDATED_AT_ASC
-  UPDATED_AT_DESC
-  WORKFLOW_ID_ASC
-  WORKFLOW_ID_DESC
-  VERSION_ASC
-  VERSION_DESC
-  ACTIVE_ASC
-  ACTIVE_DESC
-  IDENTIFIER_ASC
-  IDENTIFIER_DESC
-  PRIMARY_KEY_ASC
-  PRIMARY_KEY_DESC
 }
 
 """A Trace group."""
@@ -2851,9 +2647,6 @@ type Group implements Node {
   """The id of the group."""
   rowId: BigInt!
 
-  """The id of the owner of the group."""
-  ownerId: BigInt!
-
   """The id of the workflow the group belongs to."""
   workflowId: BigInt!
 
@@ -2862,6 +2655,9 @@ type Group implements Node {
 
   """The time when the group was last updated."""
   updatedAt: Datetime!
+
+  """The group label."""
+  label: String!
 
   """Reads a single `Workflow` that is related to this `Group`."""
   workflow: Workflow
@@ -2934,6 +2730,32 @@ type Group implements Node {
     filter: StageFilter
   ): StagesConnection!
 
+  """Actions usable for this group"""
+  actions(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """
+    A filter to be used in determining which values should be returned by the collection.
+    """
+    filter: ActionFilter
+  ): ActionsConnection!
+
   """Is the current user allowed to update this group."""
   canUpdate: Boolean
 
@@ -2961,7 +2783,7 @@ type Group implements Node {
     A filter to be used in determining which values should be returned by the collection.
     """
     filter: FormFilter
-  ): FormsConnection!
+  ): FormsConnection! @deprecated(reason: "Use group.actions instead")
 
   """Reads and enables pagination through a set of `GroupMember`."""
   members(
@@ -2988,6 +2810,7 @@ type Group implements Node {
     """
     filter: GroupMemberFilter
   ): GroupMembersConnection!
+  ownerId: BigInt
 
   """The owner of the group."""
   owner: Account_Account
@@ -3000,9 +2823,6 @@ input GroupCondition {
   """Checks for equality with the object’s `rowId` field."""
   rowId: BigInt
 
-  """Checks for equality with the object’s `ownerId` field."""
-  ownerId: BigInt
-
   """Checks for equality with the object’s `workflowId` field."""
   workflowId: BigInt
 
@@ -3011,6 +2831,9 @@ input GroupCondition {
 
   """Checks for equality with the object’s `updatedAt` field."""
   updatedAt: Datetime
+
+  """Checks for equality with the object’s `label` field."""
+  label: String
 }
 
 """
@@ -3019,9 +2842,6 @@ A filter to be used against `Group` object types. All fields are combined with a
 input GroupFilter {
   """Filter by the object’s `rowId` field."""
   rowId: BigIntFilter
-
-  """Filter by the object’s `ownerId` field."""
-  ownerId: BigIntFilter
 
   """Filter by the object’s `workflowId` field."""
   workflowId: BigIntFilter
@@ -3032,8 +2852,14 @@ input GroupFilter {
   """Filter by the object’s `updatedAt` field."""
   updatedAt: DatetimeFilter
 
+  """Filter by the object’s `label` field."""
+  label: StringFilter
+
   """Filter by the object’s `canUpdate` field."""
   canUpdate: BooleanFilter
+
+  """Filter by the object’s `ownerId` field."""
+  ownerId: BigIntFilter
 
   """Checks for all expressions in this list."""
   and: [GroupFilter!]
@@ -3045,13 +2871,16 @@ input GroupFilter {
   not: GroupFilter
 }
 
-"""An input for mutations affecting `Group`"""
-input GroupInput {
-  """The id of the owner of the group."""
-  ownerId: BigInt!
+"""An input for mutations affecting `GroupInputRecord`"""
+input GroupInputRecordInput {
+  """The ID of the workflow the group belongs to."""
+  workflowId: BigInt
 
-  """The id of the workflow the group belongs to."""
-  workflowId: BigInt!
+  """The Account ID of the organization or group that owns the group."""
+  ownerId: BigInt
+
+  """The group label."""
+  label: String
 }
 
 type GroupMember {
@@ -3105,7 +2934,7 @@ type GroupMembersConnection {
   pageInfo: PageInfo!
 
   """The count of *all* `GroupMember` you could get from the connection."""
-  totalCount: Int
+  totalCount: Int!
 }
 
 """A `GroupMember` edge in the connection."""
@@ -3131,7 +2960,7 @@ type GroupsConnection {
   pageInfo: PageInfo!
 
   """The count of *all* `Group` you could get from the connection."""
-  totalCount: Int
+  totalCount: Int!
 }
 
 """A `Group` edge in the connection."""
@@ -3148,14 +2977,14 @@ enum GroupsOrderBy {
   NATURAL
   ID_ASC
   ID_DESC
-  OWNER_ID_ASC
-  OWNER_ID_DESC
   WORKFLOW_ID_ASC
   WORKFLOW_ID_DESC
   CREATED_AT_ASC
   CREATED_AT_DESC
   UPDATED_AT_ASC
   UPDATED_AT_DESC
+  LABEL_ASC
+  LABEL_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
 }
@@ -3250,14 +3079,8 @@ type Link implements Node {
   """The stage of the link (link.meta.process.state)."""
   processState: ProcessState!
 
-  """The action used to create the link (link.meta.action)."""
-  action: String
-
-  """The form that was used to attest (link.meta.data.formId)."""
-  formId: BigInt
-
   """The last form that was used to attest (link.meta.data.lastFormId)."""
-  lastFormId: BigInt
+  lastFormId: String
 
   """The group of the link (link.meta.data.groupId)"""
   groupId: BigInt!
@@ -3271,16 +3094,20 @@ type Link implements Node {
   """The list of inputs used for this action (link.meta.data.inputs)."""
   inputs: [BigInt]
 
-  """
-  Symmetric keys used to encrypt the link data (link.meta.data.recipients).
-  """
-  recipients: JSON
+  """The configuration with which the link has been created"""
+  configId: BigInt
 
-  """Reads a single `Form` that is related to this `Link`."""
-  form: Form
+  """The key of the workflow action used by the link"""
+  actionKey: String
 
   """Reads a single `Group` that is related to this `Link`."""
   group: Group
+
+  """Reads a single `WorkflowConfig` that is related to this `Link`."""
+  config: WorkflowConfig
+
+  """The workflow action used by the link"""
+  action: Action
 
   """The data in the link (link.data)."""
   data: JSON
@@ -3310,6 +3137,10 @@ type Link implements Node {
     """
     filter: EvidenceFilter
   ): EvidencesConnection!
+
+  """The form used by the link"""
+  form: Form @deprecated(reason: "true")
+  formId: BigInt
 
   """The hash of the link."""
   linkHash: String
@@ -3378,9 +3209,8 @@ type Link implements Node {
   
   """
   workflow: Workflow!
-  createdBy: Account_User!
+  createdBy: Account_User
   owner: Account_Account!
-  encryptionKeys: Account_KeysConnection
 }
 
 """
@@ -3408,14 +3238,8 @@ input LinkCondition {
   """Checks for equality with the object’s `processState` field."""
   processState: ProcessState
 
-  """Checks for equality with the object’s `action` field."""
-  action: String
-
-  """Checks for equality with the object’s `formId` field."""
-  formId: BigInt
-
   """Checks for equality with the object’s `lastFormId` field."""
-  lastFormId: BigInt
+  lastFormId: String
 
   """Checks for equality with the object’s `groupId` field."""
   groupId: BigInt
@@ -3429,8 +3253,8 @@ input LinkCondition {
   """Checks for equality with the object’s `inputs` field."""
   inputs: [BigInt]
 
-  """Checks for equality with the object’s `recipients` field."""
-  recipients: JSON
+  """Checks for equality with the object’s `actionKey` field."""
+  actionKey: String
 }
 
 """
@@ -3458,14 +3282,8 @@ input LinkFilter {
   """Filter by the object’s `processState` field."""
   processState: ProcessStateFilter
 
-  """Filter by the object’s `action` field."""
-  action: StringFilter
-
-  """Filter by the object’s `formId` field."""
-  formId: BigIntFilter
-
   """Filter by the object’s `lastFormId` field."""
-  lastFormId: BigIntFilter
+  lastFormId: StringFilter
 
   """Filter by the object’s `groupId` field."""
   groupId: BigIntFilter
@@ -3479,8 +3297,11 @@ input LinkFilter {
   """Filter by the object’s `inputs` field."""
   inputs: BigIntListFilter
 
-  """Filter by the object’s `recipients` field."""
-  recipients: JSONFilter
+  """Filter by the object’s `actionKey` field."""
+  actionKey: StringFilter
+
+  """Filter by the object’s `formId` field."""
+  formId: BigIntFilter
 
   """Filter by the object’s `linkHash` field."""
   linkHash: StringFilter
@@ -3512,7 +3333,7 @@ type LinksConnection {
   pageInfo: PageInfo!
 
   """The count of *all* `Link` you could get from the connection."""
-  totalCount: Int
+  totalCount: Int!
 }
 
 """A `Link` edge in the connection."""
@@ -3541,10 +3362,6 @@ enum LinksOrderBy {
   RAW_DESC
   PROCESS_STATE_ASC
   PROCESS_STATE_DESC
-  ACTION_ASC
-  ACTION_DESC
-  FORM_ID_ASC
-  FORM_ID_DESC
   LAST_FORM_ID_ASC
   LAST_FORM_ID_DESC
   GROUP_ID_ASC
@@ -3555,8 +3372,8 @@ enum LinksOrderBy {
   CREATED_BY_ID_DESC
   INPUTS_ASC
   INPUTS_DESC
-  RECIPIENTS_ASC
-  RECIPIENTS_DESC
+  ACTION_KEY_ASC
+  ACTION_KEY_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
 }
@@ -3565,30 +3382,6 @@ enum LinksOrderBy {
 The root mutation type which contains root level fields which mutate data.
 """
 type Mutation {
-  """Creates a single `Form`."""
-  createForm(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: CreateFormInput!
-  ): CreateFormPayload
-
-  """Creates a single `Group`."""
-  createGroup(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: CreateGroupInput!
-  ): CreateGroupPayload
-
-  """Creates a single `Workflow`."""
-  createWorkflow(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: CreateWorkflowInput!
-  ): CreateWorkflowPayload
-
   """Updates a single `Workflow` using its globally unique id and a patch."""
   updateWorkflow(
     """
@@ -3604,6 +3397,24 @@ type Mutation {
     """
     input: UpdateWorkflowByRowIdInput!
   ): UpdateWorkflowPayload
+
+  """
+  Updates a single `WorkflowConfig` using its globally unique id and a patch.
+  """
+  updateWorkflowConfig(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateWorkflowConfigInput!
+  ): UpdateWorkflowConfigPayload
+
+  """Updates a single `WorkflowConfig` using a unique key and a patch."""
+  updateWorkflowConfigByRowId(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateWorkflowConfigByRowIdInput!
+  ): UpdateWorkflowConfigPayload
 
   """Adds multiple tags to a trace."""
   addTagsToTrace(
@@ -3629,13 +3440,29 @@ type Mutation {
     input: ArchiveWorkflowInput!
   ): ArchiveWorkflowPayload
 
-  """Assign a form to a group"""
-  assignFormToGroup(
+  """Assign a workflow action to a group"""
+  assignActionToGroup(
     """
     The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
     """
-    input: AssignFormToGroupInput!
-  ): AssignFormToGroupPayload
+    input: AssignActionToGroupInput!
+  ): AssignActionToGroupPayload
+
+  """Creates a single `Group`"""
+  createGroup(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateGroupInput!
+  ): CreateGroupPayload
+
+  """Creates a single `Workflow`"""
+  createWorkflow(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateWorkflowInput!
+  ): CreateWorkflowPayload
 
   """To edit the memberships of a group."""
   editGroupMembership(
@@ -3653,6 +3480,16 @@ type Mutation {
     input: EditWorkflowMembershipInput!
   ): EditWorkflowMembershipPayload
 
+  """
+  Creates a new configuration for a workflow and deprecates the previous one (if any).
+  """
+  newWorkflowConfig(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: NewWorkflowConfigInput!
+  ): NewWorkflowConfigPayload
+
   """Removes multiple tags from a trace."""
   removeTagsFromTrace(
     """
@@ -3660,22 +3497,6 @@ type Mutation {
     """
     input: RemoveTagsFromTraceInput!
   ): RemoveTagsFromTracePayload
-
-  """Rename a trace for the current user."""
-  renameTrace(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: RenameTraceInput!
-  ): RenameTracePayload
-
-  """Creates a new version of the form being updated."""
-  updateFormByIdentifier(
-    """
-    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
-    """
-    input: UpdateFormByIdentifierInput!
-  ): UpdateFormByIdentifierPayload
 
   """Watch a trace for the current user."""
   watchTrace(
@@ -3696,6 +3517,54 @@ type Mutation {
     """
     input: [CreateLinkInput!]
   ): CreateLinksPayload
+}
+
+"""All input for the `newWorkflowConfig` mutation."""
+input NewWorkflowConfigInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  config: NewWorkflowConfigInputRecordInput!
+}
+
+"""An input for mutations affecting `NewWorkflowConfigInputRecord`"""
+input NewWorkflowConfigInputRecordInput {
+  """The id of the workflow related to the config."""
+  workflowRowId: BigInt!
+
+  """The initial state of traces in this workflow."""
+  initState: JSON
+
+  """The possible actions to start a trace."""
+  initActions: JSON
+
+  """The json-schema definition of the trace state."""
+  stateSchema: JSON
+
+  """
+  The definition of all actions of a workflow. They should embed the forms and the effects for each action.
+  """
+  actions: JSON
+}
+
+"""The output of our `newWorkflowConfig` mutation."""
+type NewWorkflowConfigPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+  workflowConfig: WorkflowConfig
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Workflow` that is related to this `WorkflowConfig`."""
+  workflow: Workflow
 }
 
 """An object with a globally unique `ID`."""
@@ -3836,10 +3705,16 @@ type Query implements Node {
     """
     filter: WorkflowFilter
   ): WorkflowsConnection
-  formByRowId(rowId: BigInt!): Form
   groupByRowId(rowId: BigInt!): Group
   stageByRowId(rowId: BigInt!): Stage
   workflowByRowId(rowId: BigInt!): Workflow
+  workflowConfigByRowId(rowId: BigInt!): WorkflowConfig
+
+  """Returns the latest version of a form given its identifier."""
+  formByIdentifier(identifier: BigInt): Form @deprecated(reason: "Use workflow.action_by_key instead")
+
+  """Returns the latest version of a form given its id."""
+  formByRowId(rowId: BigInt): Form @deprecated(reason: "Use workflow.action_by_key instead")
   traceById(id: UUID): Trace
 
   """Reads a single `Link` using its globally unique `ID`."""
@@ -3847,12 +3722,6 @@ type Query implements Node {
     """The globally unique `ID` to be used in selecting a single `Link`."""
     id: ID!
   ): Link
-
-  """Reads a single `Form` using its globally unique `ID`."""
-  form(
-    """The globally unique `ID` to be used in selecting a single `Form`."""
-    id: ID!
-  ): Form
 
   """Reads a single `Group` using its globally unique `ID`."""
   group(
@@ -3878,16 +3747,24 @@ type Query implements Node {
     id: ID!
   ): Workflow
 
+  """Reads a single `WorkflowConfig` using its globally unique `ID`."""
+  workflowConfig(
+    """
+    The globally unique `ID` to be used in selecting a single `WorkflowConfig`.
+    """
+    id: ID!
+  ): WorkflowConfig
+
   """Initialize link for attestation"""
-  initAttestationLink(traceId: UUID, formId: BigInt!, groupId: BigInt!, formData: JSON, refs: [Ref!], recipients: [EncryptionRecipients!], type: AttestationType, tags: [String!], hashed: Boolean): JSON!
+  initAttestationLink(traceId: UUID, action: String, formId: BigInt, formIdentifier: BigInt, groupId: BigInt!, formData: JSON, refs: [Ref!], type: AttestationType, tags: [String!], hashed: Boolean): JSON!
 
   """Initialize link for transfer of ownership request"""
-  initTransferRequest(traceId: UUID!, to: BigInt!, action: TransferRequestAction!, formData: JSON, recipients: [EncryptionRecipients!], tags: [String!], hashed: Boolean): JSON!
+  initTransferRequest(traceId: UUID!, to: BigInt!, action: TransferRequestAction!, formData: JSON, tags: [String!], hashed: Boolean): JSON!
 
   """
   Initialize link for accept/reject/cancel transfer of ownership response
   """
-  initTransferResponse(traceId: UUID!, action: TransferResponseAction!, formData: JSON, recipients: [EncryptionRecipients!], tags: [String!], hashed: Boolean): JSON!
+  initTransferResponse(traceId: UUID!, action: TransferResponseAction!, formData: JSON, tags: [String!], hashed: Boolean): JSON!
 
   """Current user information"""
   me: Account_User
@@ -3933,42 +3810,7 @@ type RemoveTagsFromTracePayload {
   """An edge for our `Trace`. May be used by Relay 1."""
   traceEdge(
     """The method to use when ordering `Trace`."""
-    orderBy: [TracesOrderBy!] = PRIMARY_KEY_ASC
-  ): TracesEdge
-}
-
-"""All input for the `renameTrace` mutation."""
-input RenameTraceInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  id: UUID!
-  name: String!
-}
-
-"""The output of our `renameTrace` mutation."""
-type RenameTracePayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-  trace: Trace
-
-  """
-  Our root query field type. Allows us to run any query from our mutation payload.
-  """
-  query: Query
-
-  """Reads a single `Workflow` that is related to this `Trace`."""
-  workflow: Workflow
-
-  """An edge for our `Trace`. May be used by Relay 1."""
-  traceEdge(
-    """The method to use when ordering `Trace`."""
-    orderBy: [TracesOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [TracesOrderBy!] = [PRIMARY_KEY_ASC]
   ): TracesEdge
 }
 
@@ -3991,9 +3833,6 @@ type Stage implements Node {
   """The id of the group the stage belongs to."""
   groupId: BigInt!
 
-  """The id of the form the stage maps to, if any."""
-  formId: BigInt
-
   """The label of the stage."""
   label: String!
 
@@ -4005,18 +3844,25 @@ type Stage implements Node {
 
   """The time when the stage was last updated."""
   updatedAt: Datetime!
-
-  """The identifier of the form referenced by this stage."""
-  formIdentifier: BigInt
+  actionKey: String
 
   """Reads a single `Group` that is related to this `Stage`."""
   group: Group
 
-  """Reads a single `Form` that is related to this `Stage`."""
-  form: Form
+  """The action assigned to the stage"""
+  action: Action
 
   """Is the current user allowed to create a trace in this stage."""
   canCreateTrace: Boolean
+
+  """The form of the stage."""
+  form: Form @deprecated(reason: "Use stage.action instead")
+
+  """The ID of the form of the stage."""
+  formId: BigInt @deprecated(reason: "Use stage.action_key instead")
+
+  """The identifier of the form of the stage."""
+  formIdentifier: BigInt @deprecated(reason: "Use stage.action_key instead")
 
   """Traces that are currently in this stage."""
   traces(
@@ -4058,9 +3904,6 @@ input StageCondition {
   """Checks for equality with the object’s `groupId` field."""
   groupId: BigInt
 
-  """Checks for equality with the object’s `formId` field."""
-  formId: BigInt
-
   """Checks for equality with the object’s `label` field."""
   label: String
 
@@ -4073,7 +3916,13 @@ input StageCondition {
   """Checks for equality with the object’s `updatedAt` field."""
   updatedAt: Datetime
 
-  """Checks for equality with the object’s `formIdentifier` field."""
+  """Checks for equality with the object’s `actionKey` field."""
+  actionKey: String
+
+  """The ID of the form of the stage"""
+  formId: BigInt
+
+  """The identifier of the form of the stage"""
   formIdentifier: BigInt
 }
 
@@ -4087,9 +3936,6 @@ input StageFilter {
   """Filter by the object’s `groupId` field."""
   groupId: BigIntFilter
 
-  """Filter by the object’s `formId` field."""
-  formId: BigIntFilter
-
   """Filter by the object’s `label` field."""
   label: StringFilter
 
@@ -4102,11 +3948,17 @@ input StageFilter {
   """Filter by the object’s `updatedAt` field."""
   updatedAt: DatetimeFilter
 
-  """Filter by the object’s `formIdentifier` field."""
-  formIdentifier: BigIntFilter
+  """Filter by the object’s `actionKey` field."""
+  actionKey: StringFilter
 
   """Filter by the object’s `canCreateTrace` field."""
   canCreateTrace: BooleanFilter
+
+  """Filter by the object’s `formId` field."""
+  formId: BigIntFilter
+
+  """Filter by the object’s `formIdentifier` field."""
+  formIdentifier: BigIntFilter
 
   """Checks for all expressions in this list."""
   and: [StageFilter!]
@@ -4132,7 +3984,7 @@ type StagesConnection {
   pageInfo: PageInfo!
 
   """The count of *all* `Stage` you could get from the connection."""
-  totalCount: Int
+  totalCount: Int!
 }
 
 """A `Stage` edge in the connection."""
@@ -4151,8 +4003,6 @@ enum StagesOrderBy {
   ID_DESC
   GROUP_ID_ASC
   GROUP_ID_DESC
-  FORM_ID_ASC
-  FORM_ID_DESC
   LABEL_ASC
   LABEL_DESC
   TYPE_ASC
@@ -4161,8 +4011,8 @@ enum StagesOrderBy {
   CREATED_AT_DESC
   UPDATED_AT_ASC
   UPDATED_AT_DESC
-  FORM_IDENTIFIER_ASC
-  FORM_IDENTIFIER_DESC
+  ACTION_KEY_ASC
+  ACTION_KEY_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
 }
@@ -4470,7 +4320,7 @@ type Trace implements Node {
   ): LinksConnection!
 
   """The trace name overriden by user."""
-  name: String
+  name: String @deprecated(reason: "Trace renaming has been removed")
 
   """List of the groups to whom a trace can be transferred."""
   nextGroups(
@@ -4530,14 +4380,14 @@ type Trace implements Node {
     filter: StageFilter
   ): StagesConnection!
 
+  """The state of the trace."""
+  state: TraceState
+
   """Get the first link of the trace."""
   tail: Link
 
   """The user watched flag."""
   watched: Boolean
-
-  """The current state of the trace."""
-  state: TraceState!
 }
 
 """
@@ -4644,7 +4494,7 @@ type TracesConnection {
   pageInfo: PageInfo!
 
   """The count of *all* `Trace` you could get from the connection."""
-  totalCount: Int
+  totalCount: Int!
 }
 
 """A `Trace` edge in the connection."""
@@ -4671,11 +4521,37 @@ enum TracesOrderBy {
   PRIMARY_KEY_DESC
 }
 
-type TraceState {
-  data: JSON!
+"""The state of a trace."""
+type TraceState implements Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  id: ID!
+
+  """ID of the state."""
+  rowId: BigInt!
+
+  """The ID of the trace."""
   traceId: UUID!
-  headLinkId: BigInt!
+  headLinkHash: String!
+
+  """The data of the trace state."""
+  data: JSON!
+
+  """The time when the state was created."""
+  createdAt: Datetime!
+
+  """The time when the state was last upadted."""
   updatedAt: Datetime!
+
+  """The next possible actions per group"""
+  nextActions: JSON
+
+  """The head link of the trace."""
+  headLink: Link
+
+  """The trace associated with the state."""
+  trace: Trace
 }
 
 enum TransferRequestAction {
@@ -4687,41 +4563,6 @@ enum TransferResponseAction {
   _ACCEPT_TRANSFER_
   _REJECT_TRANSFER_
   _CANCEL_TRANSFER_
-}
-
-"""All input for the `updateFormByIdentifier` mutation."""
-input UpdateFormByIdentifierInput {
-  """
-  An arbitrary string value with no semantic meaning. Will be included in the
-  payload verbatim. May be used to track mutations by the client.
-  """
-  clientMutationId: String
-  identifier: BigInt!
-  patch: FormPatchRecordInput!
-}
-
-"""The output of our `updateFormByIdentifier` mutation."""
-type UpdateFormByIdentifierPayload {
-  """
-  The exact same `clientMutationId` that was provided in the mutation input,
-  unchanged and unused. May be used by a client to track mutations.
-  """
-  clientMutationId: String
-  form: Form
-
-  """
-  Our root query field type. Allows us to run any query from our mutation payload.
-  """
-  query: Query
-
-  """Reads a single `Workflow` that is related to this `Form`."""
-  workflow: Workflow
-
-  """An edge for our `Form`. May be used by Relay 1."""
-  formEdge(
-    """The method to use when ordering `Form`."""
-    orderBy: [FormsOrderBy!] = PRIMARY_KEY_ASC
-  ): FormsEdge
 }
 
 """All input for the `updateWorkflowByRowId` mutation."""
@@ -4739,6 +4580,62 @@ input UpdateWorkflowByRowIdInput {
 
   """The id of the workflow."""
   rowId: BigInt!
+}
+
+"""All input for the `updateWorkflowConfigByRowId` mutation."""
+input UpdateWorkflowConfigByRowIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  An object where the defined keys will be set on the `WorkflowConfig` being updated.
+  """
+  patch: WorkflowConfigPatch!
+
+  """ID of the workflow config."""
+  rowId: BigInt!
+}
+
+"""All input for the `updateWorkflowConfig` mutation."""
+input UpdateWorkflowConfigInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `WorkflowConfig` to be updated.
+  """
+  id: ID!
+
+  """
+  An object where the defined keys will be set on the `WorkflowConfig` being updated.
+  """
+  patch: WorkflowConfigPatch!
+}
+
+"""The output of our update `WorkflowConfig` mutation."""
+type UpdateWorkflowConfigPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `WorkflowConfig` that was updated by this mutation."""
+  workflowConfig: WorkflowConfig
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `Workflow` that is related to this `WorkflowConfig`."""
+  workflow: Workflow
 }
 
 """All input for the `updateWorkflow` mutation."""
@@ -4779,7 +4676,7 @@ type UpdateWorkflowPayload {
   """An edge for our `Workflow`. May be used by Relay 1."""
   workflowEdge(
     """The method to use when ordering `Workflow`."""
-    orderBy: [WorkflowsOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [WorkflowsOrderBy!] = [PRIMARY_KEY_ASC]
   ): WorkflowsEdge
 }
 
@@ -4819,7 +4716,7 @@ type WatchTracePayload {
   """An edge for our `Trace`. May be used by Relay 1."""
   traceEdge(
     """The method to use when ordering `Trace`."""
-    orderBy: [TracesOrderBy!] = PRIMARY_KEY_ASC
+    orderBy: [TracesOrderBy!] = [PRIMARY_KEY_ASC]
   ): TracesEdge
 }
 
@@ -4845,8 +4742,8 @@ type Workflow implements Node {
   """The time when the workflow was last updated."""
   updatedAt: Datetime!
 
-  """The account id that owns the workflow."""
-  accountId: BigInt!
+  """The overview configuration of the workflow."""
+  overviewConfig: JSON
 
   """Reads and enables pagination through a set of `Trace`."""
   traces(
@@ -4918,9 +4815,13 @@ type Workflow implements Node {
     """
     filter: GroupFilter
   ): GroupsConnection!
+  accountId: BigInt
 
-  """Reads and enables pagination through a set of `Form`."""
-  allForms(
+  """Gets an action according to its key"""
+  actionByKey(key: String): Action
+
+  """Gets the actions of the workflow"""
+  actions(
     """Only read the first `n` values of the set."""
     first: Int
 
@@ -4939,25 +4840,18 @@ type Workflow implements Node {
     """Read all values in the set after (below) this cursor."""
     after: Cursor
 
-    """The method to use when ordering `Form`."""
-    orderBy: [FormsOrderBy!] = [PRIMARY_KEY_ASC]
-
-    """
-    A condition to be used in determining which values should be returned by the collection.
-    """
-    condition: FormCondition
-
     """
     A filter to be used in determining which values should be returned by the collection.
     """
-    filter: FormFilter
-  ): FormsConnection!
+    filter: ActionFilter
+  ): ActionsConnection!
 
   """The user archived flag."""
   archived: Boolean
 
   """Is the current user allowed to update this workflow."""
   canUpdate: Boolean
+  config: WorkflowConfig
 
   """Returns all of the active forms for this workflow."""
   forms(
@@ -4983,7 +4877,7 @@ type Workflow implements Node {
     A filter to be used in determining which values should be returned by the collection.
     """
     filter: FormFilter
-  ): FormsConnection!
+  ): FormsConnection! @deprecated(reason: "Use workflow.actions instead")
 
   """Get all the links of the workflow"""
   links(
@@ -5037,6 +4931,9 @@ type Workflow implements Node {
     filter: WorkflowMemberFilter
   ): WorkflowMembersConnection!
 
+  """Gets the raw JSON content of an action as according to its key"""
+  rawActionByKey(key: String): JSON
+
   """The account that owns the workflow."""
   account: Account_Account
 }
@@ -5060,9 +4957,92 @@ input WorkflowCondition {
 
   """Checks for equality with the object’s `updatedAt` field."""
   updatedAt: Datetime
+}
 
-  """Checks for equality with the object’s `accountId` field."""
-  accountId: BigInt
+"""The config of a workflow."""
+type WorkflowConfig implements Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  id: ID!
+
+  """ID of the workflow config."""
+  rowId: BigInt!
+
+  """The ID of the workflow."""
+  workflowId: BigInt!
+
+  """The overview configuration of the workflow."""
+  overview: JSON
+
+  """The JSON schema of the workflow state."""
+  stateSchema: JSON
+
+  """The initial state of each trace in the workflow."""
+  initState: JSON
+
+  """The actions that may be used to start a trace."""
+  initActions: JSON
+
+  """The actions relative to the business logic of the workflow."""
+  actions: JSON
+
+  """The version number of the config."""
+  version: BigInt!
+
+  """Denotes whether or not this is the active version of the config."""
+  active: Boolean!
+
+  """The time when the config was created."""
+  createdAt: Datetime!
+
+  """The time when the config was last upadted."""
+  updatedAt: Datetime!
+
+  """Reads a single `Workflow` that is related to this `WorkflowConfig`."""
+  workflow: Workflow
+
+  """Reads and enables pagination through a set of `Link`."""
+  links(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `Link`."""
+    orderBy: [LinksOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: LinkCondition
+
+    """
+    A filter to be used in determining which values should be returned by the collection.
+    """
+    filter: LinkFilter
+  ): LinksConnection!
+}
+
+"""
+Represents an update to a `WorkflowConfig`. Fields that are set will be updated.
+"""
+input WorkflowConfigPatch {
+  """The overview configuration of the workflow."""
+  overview: JSON
 }
 
 """
@@ -5103,13 +5083,16 @@ input WorkflowFilter {
   not: WorkflowFilter
 }
 
-"""An input for mutations affecting `Workflow`"""
-input WorkflowInput {
+"""An input for mutations affecting `WorkflowInputRecord`"""
+input WorkflowInputRecordInput {
   """The name of the workflow."""
-  name: String!
+  name: String
 
   """The description of the workflow."""
   description: String
+
+  """The Account ID of the organization that owns the workflow."""
+  ownerId: BigInt
 }
 
 type WorkflowMember {
@@ -5162,10 +5145,8 @@ type WorkflowMembersConnection {
   """Information to aid in pagination."""
   pageInfo: PageInfo!
 
-  """
-  The count of *all* `WorkflowMember` you could get from the connection.
-  """
-  totalCount: Int
+  """The count of *all* `WorkflowMember` you could get from the connection."""
+  totalCount: Int!
 }
 
 """A `WorkflowMember` edge in the connection."""
@@ -5186,6 +5167,9 @@ input WorkflowPatch {
 
   """The description of the workflow."""
   description: String
+
+  """The overview configuration of the workflow."""
+  overviewConfig: JSON
 }
 
 """A connection to a list of `Workflow` values."""
@@ -5202,7 +5186,7 @@ type WorkflowsConnection {
   pageInfo: PageInfo!
 
   """The count of *all* `Workflow` you could get from the connection."""
-  totalCount: Int
+  totalCount: Int!
 }
 
 """A `Workflow` edge in the connection."""
@@ -5227,8 +5211,6 @@ enum WorkflowsOrderBy {
   CREATED_AT_DESC
   UPDATED_AT_ASC
   UPDATED_AT_DESC
-  ACCOUNT_ID_ASC
-  ACCOUNT_ID_DESC
   PRIMARY_KEY_ASC
   PRIMARY_KEY_DESC
 }

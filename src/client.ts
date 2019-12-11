@@ -2,6 +2,7 @@ import to from 'await-to-js';
 import { sig } from '@stratumn/js-crypto';
 import fetch, { RequestInit } from 'node-fetch';
 import FormData from 'form-data';
+import os from 'os';
 import { URL } from 'url';
 import merge from 'lodash.merge';
 import qs, { ParsedUrlQueryInput } from 'querystring';
@@ -26,6 +27,9 @@ import {
 import { makeEndpoints, makeAuthPayload } from './helpers';
 import { FileWrapper } from './fileWrapper';
 import HttpError from './httpError';
+
+// get the version of the current package for user agent info
+import { version as pkgVersion } from '../package.json';
 
 /**
  * The default fetch options:
@@ -81,6 +85,11 @@ export class Client {
   private enableDebugging?: boolean;
 
   /**
+   * user agents to be sent with the requests
+   */
+  private userAgent: string;
+
+  /**
    * Constructs a new instance of the Client
    * @param opts the client options
    */
@@ -89,6 +98,13 @@ export class Client {
     this.secret = opts.secret;
     this.mutex = new Mutex();
     this.enableDebugging = opts.enableDebugging;
+
+    // build user agent in case we are not in the browser
+    this.userAgent = [
+      `${os.platform()}/${os.release()}`,
+      `Node/${process.version}`,
+      `stratumn-sdk-js/${pkgVersion}`
+    ].join(' ');
   }
 
   /*********************************************************
@@ -168,17 +184,21 @@ export class Client {
     // start building the fetch request
     // - always use application/json
     // - set the Authorization header
-    const baseReq: RequestInit = {
-      headers: {
-        // content-type in lowercase as
-        // FormData headers spell it like that.
-        'content-type': 'application/json',
-        Authorization: await this.getAuthorizationHeader({
-          authToken,
-          skipAuth
-        })
-      }
+    const headers: { [k: string]: string } = {
+      // content-type in lowercase as
+      // FormData headers spell it like that.
+      'content-type': 'application/json',
+      Authorization: await this.getAuthorizationHeader({
+        authToken,
+        skipAuth
+      })
     };
+
+    if (this.userAgent) {
+      headers['user-agent'] = this.userAgent;
+    }
+
+    const baseReq: RequestInit = { headers };
 
     // merge the first request part with the provided request
     // which contains the body, method etc... then call fetch
@@ -415,6 +435,7 @@ export class Client {
       graphqlRequest<T>(
         gqlUrl,
         await this.getAuthorizationHeader(),
+        this.userAgent,
         query,
         variables
       )

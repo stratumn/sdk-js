@@ -40,10 +40,10 @@ describe('Sdk', () => {
     };
     mockClient.graphql.mockImplementation(graphqlImpl as any);
     await Promise.all([
-      sdk.newTrace({ formId: '42', data: {} }),
-      sdk.newTrace({ formId: '43', data: {} }),
-      sdk.newTrace({ formId: '44', data: {} }),
-      sdk.newTrace({ formId: '45', data: {} })
+      sdk.newTrace({ actionKey: '42', data: {} }),
+      sdk.newTrace({ actionKey: '43', data: {} }),
+      sdk.newTrace({ actionKey: '44', data: {} }),
+      sdk.newTrace({ actionKey: '45', data: {} })
     ]);
     expect(mockClient.graphql).toHaveBeenCalledTimes(5);
     expect(

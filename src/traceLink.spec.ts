@@ -19,7 +19,7 @@ describe('TraceLink', () => {
     type,
     ownerId,
     groupId,
-    formId,
+    actionKey,
     lastFormId,
     inputs,
     createdAt,
@@ -47,7 +47,7 @@ describe('TraceLink', () => {
     expect(tLink.createdAt()).toEqual(createdAt);
     expect(tLink.owner()).toEqual(ownerId);
     expect(tLink.group()).toEqual(groupId);
-    expect(tLink.form()).toEqual(formId);
+    expect(tLink.form()).toEqual(actionKey);
     expect(tLink.lastForm()).toEqual(lastFormId);
     expect(tLink.inputs()).toEqual(inputs);
   });
@@ -62,6 +62,6 @@ describe('TraceLink', () => {
     expect(newtLink.createdAt()).toEqual(createdAt);
     expect(newtLink.owner()).toEqual(ownerId);
     expect(newtLink.group()).toEqual(groupId);
-    expect(newtLink.form()).toEqual(formId);
+    expect(newtLink.form()).toEqual(actionKey);
   });
 });

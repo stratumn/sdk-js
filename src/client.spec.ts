@@ -58,13 +58,23 @@ describe('Client', () => {
       expect(mockFetch).toHaveBeenNthCalledWith(
         1,
         'https://account-api.stratumn.com/salt?email=alice',
-        { headers: { Authorization: '', 'content-type': 'application/json' } }
+        {
+          headers: {
+            Authorization: '',
+            'content-type': 'application/json',
+            'user-agent': expect.any(String)
+          }
+        }
       );
       expect(mockFetch).toHaveBeenNthCalledWith(
         2,
         'https://account-api.stratumn.com/login',
         {
-          headers: { Authorization: '', 'content-type': 'application/json' },
+          headers: {
+            Authorization: '',
+            'content-type': 'application/json',
+            'user-agent': expect.any(String)
+          },
           body: JSON.stringify({ email, passwordHash }),
           method: 'POST'
         }
@@ -87,7 +97,8 @@ describe('Client', () => {
         {
           headers: {
             Authorization: expect.stringMatching(/Bearer .*/),
-            'content-type': 'application/json'
+            'content-type': 'application/json',
+            'user-agent': expect.any(String)
           }
         }
       );
@@ -197,6 +208,7 @@ describe('Client', () => {
         expect(mockGraphqlRequest).toHaveBeenCalledWith(
           'https://trace-api.stratumn.com/graphql',
           'Bearer valid',
+          expect.any(String),
           'query { me { name } }',
           undefined
         );
@@ -461,6 +473,7 @@ describe('Client', () => {
             'https://trace-api.stratumn.com/graphql',
             expect.any(String),
             expect.any(String),
+            expect.any(String),
             undefined
           );
         }
@@ -508,7 +521,8 @@ describe('Client', () => {
             Authorization: expect.stringMatching(/Bearer .*/),
             'content-type': expect.stringContaining(
               'multipart/form-data; boundary='
-            )
+            ),
+            'user-agent': expect.any(String)
           },
           body: expect.any(Object)
         }
@@ -557,7 +571,8 @@ describe('Client', () => {
         {
           headers: {
             Authorization: 'Bearer valid',
-            'content-type': 'application/json'
+            'content-type': 'application/json',
+            'user-agent': expect.any(String)
           }
         }
       );

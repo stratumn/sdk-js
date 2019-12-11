@@ -62,7 +62,7 @@ it('continuous testing', async () => {
   const requests = await Promise.all(
     requestsBody.map(body =>
       sdkBot1.newTrace({
-        formId: formRequestId,
+        actionKey: formRequestId,
         data: {
           body
         }
