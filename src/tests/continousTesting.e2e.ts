@@ -106,6 +106,7 @@ it('continuous testing', async () => {
   expect(backlog.totalCount).toBeGreaterThanOrEqual(1);
   expect(backlog.traces[0].traceId).toEqual(firstRequest.traceId);
 
+  await sdkBot2.acceptTransfer({ traceId: secondRequest.traceId });
   const { nodeJsFilePath, makeBrowserFile } = fixtures.FileWrappers;
   const browserFile = makeBrowserFile();
   const secondResponse = await sdkBot2.appendLink({
