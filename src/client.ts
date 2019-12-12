@@ -99,7 +99,6 @@ export class Client {
     this.mutex = new Mutex();
     this.enableDebugging = opts.enableDebugging;
 
-    // build user agent in case we are not in the browser
     this.userAgent = [
       `${os.platform()}/${os.release()}`,
       `Node/${process.version}`,
