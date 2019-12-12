@@ -1,5 +1,5 @@
-import { sig } from "@stratumn/js-crypto";
-import { ClientOptions } from "./client";
+import { sig } from '@stratumn/js-crypto';
+import { ClientOptions } from './client';
 
 /**
  * Options interface used to instantiate the Sdk.
