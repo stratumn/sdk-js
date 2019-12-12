@@ -67,7 +67,7 @@ You can create a new trace this way:
 
 ```js
 let myFirstTrace = await sdk.newTrace({
-  formId: YOUR_CONFIG.formNewShipment,
+  actionKey: YOUR_CONFIG.actionNewShipment,
   data: {
     operation: 'new shipment XYZ for ABC',
     weight: 123,
@@ -79,7 +79,7 @@ let myFirstTrace = await sdk.newTrace({
 
 You must provide:
 
-- `formId`: a valid form id,
+- `actionKey`: a valid action key,
 - `data`: the data object corresponding to the action being done.
 
 The Sdk will return an object corresponding to the "state" of your new trace. This state exposes the following fields:
@@ -92,8 +92,6 @@ The Sdk will return an object corresponding to the "state" of your new trace. Th
 
 Notes:
 
-- You can view your forms detail from your group's Attestation Forms page (for ex `https://trace.stratumn.com/group/322547/forms`).
-- When viewing a specific form detail, you can retrieve the form id from the url. (`https://trace.stratumn.com/group/322547/form/788547` => `formId=788547`).
 - The `data` object argument must be valid against the JSON schema of the form you are using, otherwise Trace will throw a validation error.
 - Note that the return type of `sdk.newTrace` is `Promise<TraceState>` since this operation is asynchronous. You must `await` for the response in order to effectively use it.
 
@@ -104,7 +102,7 @@ Assuming you have access to the head link of the trace you wish to append a link
 ```js
 await sdk.appendLink({
   prevLink: myFirstTrace.headLink,
-  formId: YOUR_CONFIG.formDeparture,
+  actionKey: YOUR_CONFIG.actionDeparture,
   data: {
     operation: 'XYZ shipment departed port for ABC',
     destination: 'ABC',
@@ -119,7 +117,7 @@ If you don't have access to the head link, you can also provide the trace id:
 ```js
 await sdk.appendLink({
   traceId: someTraceId,
-  formId: YOUR_CONFIG.formDeparture,
+  actionKey: YOUR_CONFIG.actionDeparture,
   data: {
     ...
   }
@@ -128,7 +126,7 @@ await sdk.appendLink({
 
 You must provide:
 
-- `formId`: a valid form id,
+- `actionKey`: a valid action key,
 - `data`: the data object corresponding to the action being done,
 - `prevLink` or `traceId`.
 
@@ -136,8 +134,6 @@ The Sdk will return the new state object of the trace. The shape of this object 
 
 Notes:
 
-- You can view your forms detail from your group's Attestation Forms page (for ex `https://trace.stratumn.com/group/322547/forms`).
-- When viewing a specific form detail, you can retrieve the form id from the url. (`https://trace.stratumn.com/group/322547/form/788547` => `formId=788547`).
 - The `data` object argument must be valid against the JSON schema of the form you are using, otherwise Trace will throw a validation error.
 
 ### Requesting the transfer of ownership of a trace
@@ -382,7 +378,7 @@ var { FileWrapper } = require('@stratumn/sdk');
 
 var state = await sdk.appendLink({
   prevLink,
-  formId,
+  actionKey,
   data: {
     operation: 'XYZ shipment departed port for ABC',
     destination: 'ABC',
@@ -403,7 +399,7 @@ var { FileWrapper } = require('@stratumn/sdk');
 
 var state = await sdk.appendLink({
   prevLink,
-  formId,
+  actionKey,
   data: {
     operation: 'XYZ shipment departed port for ABC',
     destination: 'ABC',
@@ -484,4 +480,3 @@ In this case, `certif` and `pic` are `FileWrapper` objects from which you can ex
 This SDK is distributed under the
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0),
 see LICENSE.txt for more information.
-

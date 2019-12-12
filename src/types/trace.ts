@@ -59,23 +59,25 @@ export interface ITraceLink<TLinkData = any> extends Link {
 
 /**
  * Interface used as argument to create a new trace.
- * User must provide the form id to use and the form data.
+ * User must provide the action key or form id to use and the form data.
  */
 export interface NewTraceInput<TLinkData = any> {
-  formId: string;
+  actionKey?: string;
+  formId?: string;
   data: TLinkData;
 }
 
 /**
  * Interface used as argument to append a new link to a trace.
- * User must provide the trace id, form id and form data.
+ * User must provide the trace id, action key or form id and form data.
  * User can optionally provide the previous link hash, if not it will be fetched
  * from the API first.
  * The key difference with the NewTraceInput is that the trace id must be provided.
  */
 export interface AppendLinkInput<TLinkData = any> {
   traceId?: string;
-  formId: string;
+  actionKey?: string;
+  formId?: string;
   data: TLinkData;
   prevLink?: ITraceLink;
 }

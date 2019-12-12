@@ -166,12 +166,6 @@ export class Sdk<TState = any> {
         throw new Error('Cannot get signing private key');
       }
 
-      // extract action names
-      const actionNames: { [formId: string]: string } = {};
-      workflow.forms.nodes.forEach(f => {
-        actionNames[f.formId] = f.stageName;
-      });
-
       // store the new config
       this.config = {
         workflowId,
@@ -179,7 +173,6 @@ export class Sdk<TState = any> {
         accountId,
         groupId,
         ownerId,
-        actionNames,
         signingPrivateKey
       };
 
@@ -293,23 +286,23 @@ export class Sdk<TState = any> {
    * Get the traces in a given stage (INCOMING, OUTGOING, BACKLOG, ATTESTATION)
    * When stageType=ATTESTATION, you must also provide the form id to
    * identify the stage.
-   * If no stage correspond to the stageType x formId, it will throw.
+   * If no stage correspond to the stageType x actionKey, it will throw.
    * If more than one stage is found it will also throw.
    *
    * @param stageType the stage type
    * @param paginationInfo the pagination info
-   * @param formId (optional) the formId in case of ATTESTATION
+   * @param actionKey (optional) the actionKey in case of ATTESTATION
    * @return the traces in a given stage
    */
   private async getTracesInStage(
     stageType: TraceStageType,
     paginationInfo: PaginationInfo,
-    formId?: string
+    actionKey?: string
   ) {
-    // formId can only be set in ATTESTATION case
-    if ((stageType === 'ATTESTATION') !== !!formId) {
+    // actionKey can only be set in ATTESTATION case
+    if ((stageType === 'ATTESTATION') !== !!actionKey) {
       throw new Error(
-        'You must and can only provide formId when stageType is ATTESTATION'
+        'You must and can only provide actionKey when stageType is ATTESTATION'
       );
     }
     // extract info from config
@@ -323,7 +316,7 @@ export class Sdk<TState = any> {
     const variables: Variables = {
       groupId,
       stageType,
-      formId,
+      actionKey,
       ...paginationInfo
     };
 
@@ -356,7 +349,7 @@ export class Sdk<TState = any> {
     }
 
     // compute detail for error
-    const stageDetail = `${stageType}${formId ? `:${formId}` : ''}`;
+    const stageDetail = `${stageType}${actionKey ? `:${actionKey}` : ''}`;
 
     // throw if no stages were found
     if (stages.length === 0) {
@@ -466,16 +459,15 @@ export class Sdk<TState = any> {
    */
   public async newTrace<TLinkData>(input: NewTraceInput<TLinkData>) {
     // extract info from input
-    const { data, formId } = input;
+    const { data, actionKey, formId } = input;
+
+    const action = actionKey || formId;
+    if (!action) {
+      throw new Error('one of actionKey or formId should be provided');
+    }
 
     // extract info from config
-    const {
-      workflowId,
-      userId,
-      ownerId,
-      groupId,
-      actionNames
-    } = await this.getConfig();
+    const { workflowId, userId, ownerId, groupId } = await this.getConfig();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -486,7 +478,7 @@ export class Sdk<TState = any> {
       workflowId
     })
       // this is an attestation
-      .forAttestation(formId, actionNames[formId], dataAfterFileUpload)
+      .forAttestation(action, dataAfterFileUpload)
       // add owner info
       .withOwner(ownerId)
       // add group info
@@ -534,16 +526,15 @@ export class Sdk<TState = any> {
     const parentLink = await this.getHeadLink(input);
 
     // extract info from input
-    const { data, formId } = input;
+    const { data, actionKey, formId } = input;
+
+    const action = actionKey || formId;
+    if (!action) {
+      throw new Error('one of actionKey or formId should be provided');
+    }
 
     // extract info from config
-    const {
-      workflowId,
-      userId,
-      ownerId,
-      groupId,
-      actionNames
-    } = await this.getConfig();
+    const { workflowId, userId, ownerId, groupId } = await this.getConfig();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -556,7 +547,7 @@ export class Sdk<TState = any> {
       parentLink
     })
       // this is an attestation
-      .forAttestation(formId, actionNames[formId], dataAfterFileUpload)
+      .forAttestation(action, dataAfterFileUpload)
       // add owner info
       .withOwner(ownerId)
       // add group info
@@ -831,10 +822,10 @@ export class Sdk<TState = any> {
    * @return the backlog traces
    */
   public async getAttestationTraces(
-    formId: string,
+    actionKey: string,
     paginationInfo: PaginationInfo
   ) {
-    return this.getTracesInStage('ATTESTATION', paginationInfo, formId);
+    return this.getTracesInStage('ATTESTATION', paginationInfo, actionKey);
   }
 
   /**
