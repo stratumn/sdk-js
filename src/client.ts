@@ -28,9 +28,6 @@ import { makeEndpoints, makeAuthPayload } from './helpers';
 import { FileWrapper } from './fileWrapper';
 import HttpError from './httpError';
 
-// get the version of the current package for user agent info
-import { version as pkgVersion } from '../package.json';
-
 /**
  * The default fetch options:
  * - do not skip authentication
@@ -102,7 +99,7 @@ export class Client {
     this.userAgent = [
       `${os.platform()}/${os.release()}`,
       `Node/${process.version}`,
-      `stratumn-sdk-js/${pkgVersion}`
+      `stratumn-sdk-js/${process.env.npm_package_version}`
     ].join(' ');
   }
 
