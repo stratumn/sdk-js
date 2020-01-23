@@ -42,6 +42,8 @@ import { FileWrapper } from './fileWrapper';
 import { Mutex } from 'async-mutex';
 import { FileRecord } from './fileRecord';
 
+const ERROR_CONFIG_DEPRECATED = 'link config deprecated';
+
 /**
  * The Stratumn javascript Sdk
  */
@@ -84,15 +86,16 @@ export class Sdk<TState = any> {
    * run a GraphQL query to retrieve the relevant info
    * and will generate the config.
    *
+   * @param forceUpdate set to true if we want to force update the config
    * @returns the Sdk config object
    */
-  private async getConfig(): Promise<SdkConfig> {
+  private async getConfig(forceUpdate = false): Promise<SdkConfig> {
     // acquire the mutex
     const release = await this.mutex.acquire();
 
     try {
       // if the config already exists use it!
-      if (this.config) {
+      if (this.config && !forceUpdate) {
         release();
         return this.config;
       }
@@ -127,7 +130,10 @@ export class Sdk<TState = any> {
         throw new Error(`Cannot find workflow ${workflowId}`);
       }
 
-      const { groups } = workflow;
+      const {
+        groups,
+        config: { id: configId }
+      } = workflow;
 
       // get all the account ids I am a member of
       const myAccounts = memberOf.nodes.map(a => a.accountId);
@@ -168,6 +174,7 @@ export class Sdk<TState = any> {
 
       // store the new config
       this.config = {
+        configId,
         workflowId,
         userId,
         accountId,
@@ -217,11 +224,13 @@ export class Sdk<TState = any> {
    * executes the GraphQL mutation.
    *
    * @param input the input argument to create the Link
+   * @param firstTry if this is not the first try, do not retry
    * @returns the Trace
    */
   private async createLink<TLinkData>(
-    linkBuilder: TraceLinkBuilder<TLinkData>
-  ) {
+    linkBuilder: TraceLinkBuilder<TLinkData>,
+    firstTry: boolean = true
+  ): Promise<TraceState<TState, TLinkData>> {
     // extract signing key from config
     const { signingPrivateKey } = await this.getConfig();
 
@@ -235,16 +244,41 @@ export class Sdk<TState = any> {
     type Response = CreateLinkMutation.Response;
     type Variables = CreateLinkMutation.Variables;
 
-    // execute the graphql mutation
-    const rsp = await this.client.graphql<Response, Variables>(
-      // the graphql document
-      CreateLinkMutation.document,
-      // export the link as object
-      { link: link.toObject({ bytes: String }), data: link.formData() }
-    );
+    try {
+      // execute the graphql mutation
+      const rsp = await this.client.graphql<Response, Variables>(
+        // the graphql document
+        CreateLinkMutation.document,
+        // export the link as object
+        { link: link.toObject({ bytes: String }), data: link.formData() }
+      );
 
-    // build and return the TraceState object
-    return this.makeTraceState<TLinkData>(rsp.createLink.trace);
+      // build and return the TraceState object
+      return this.makeTraceState<TLinkData>(rsp.createLink.trace);
+    } catch (err) {
+      if (
+        firstTry &&
+        err &&
+        err.response &&
+        Array.isArray(err.response.errors) &&
+        err.response.errors.some(
+          (e: any) => e.message === ERROR_CONFIG_DEPRECATED
+        )
+      ) {
+        // If the wf config is deprecated, refetch it and retry
+        const { configId } = await this.getConfig(true);
+
+        // clean signatures
+        // @ts-ignore
+        link.link.signatures = [];
+
+        // Update the config ID in the link builder
+        linkBuilder.withConfigId(configId);
+
+        return this.createLink(linkBuilder, false);
+      }
+      throw err;
+    }
   }
 
   /**
@@ -467,7 +501,13 @@ export class Sdk<TState = any> {
     }
 
     // extract info from config
-    const { workflowId, userId, ownerId, groupId } = await this.getConfig();
+    const {
+      workflowId,
+      userId,
+      ownerId,
+      groupId,
+      configId
+    } = await this.getConfig();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -475,7 +515,8 @@ export class Sdk<TState = any> {
     // use a TraceLinkBuilder to create the first link
     const linkBuilder = new TraceLinkBuilder<typeof dataAfterFileUpload>({
       // only provide workflowId to initiate a new trace
-      workflowId
+      workflowId,
+      configId
     })
       // this is an attestation
       .forAttestation(action, dataAfterFileUpload)
@@ -534,7 +575,13 @@ export class Sdk<TState = any> {
     }
 
     // extract info from config
-    const { workflowId, userId, ownerId, groupId } = await this.getConfig();
+    const {
+      workflowId,
+      userId,
+      ownerId,
+      groupId,
+      configId
+    } = await this.getConfig();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -544,7 +591,8 @@ export class Sdk<TState = any> {
       // provide workflow id
       workflowId,
       // and parent link to append to the existing trace
-      parentLink
+      parentLink,
+      configId
     })
       // this is an attestation
       .forAttestation(action, dataAfterFileUpload)
@@ -573,12 +621,14 @@ export class Sdk<TState = any> {
     const { data, recipient } = input;
 
     // extract info from config
-    const { workflowId, userId } = await this.getConfig();
+    const { workflowId, userId, configId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
       // provide workflow id
       workflowId,
+      // and wf config ID
+      configId,
       // and parent link to append to the existing trace
       parentLink
     })
@@ -604,12 +654,14 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, userId, groupId } = await this.getConfig();
+    const { workflowId, userId, groupId, configId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
       // provide workflow id
       workflowId,
+      // and wf config ID
+      configId,
       // and parent link to append to the existing trace
       parentLink
     })
@@ -637,12 +689,20 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, userId, ownerId, groupId } = await this.getConfig();
+    const {
+      workflowId,
+      userId,
+      ownerId,
+      groupId,
+      configId
+    } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
       // provide workflow id
       workflowId,
+      // and wf config ID
+      configId,
       // and parent link to append to the existing trace
       parentLink
     })
@@ -675,12 +735,14 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, userId } = await this.getConfig();
+    const { workflowId, userId, configId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
       // provide workflow id
       workflowId,
+      // and wf config ID
+      configId,
       // and parent link to append to the existing trace
       parentLink
     })
@@ -709,12 +771,14 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, userId } = await this.getConfig();
+    const { workflowId, userId, configId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
       // provide workflow id
       workflowId,
+      // and wf config ID
+      configId,
       // and parent link to append to the existing trace
       parentLink
     })

@@ -149,6 +149,9 @@ export namespace ConfigQuery {
         }
       }
       workflow: workflowByRowId(rowId: $workflowId) {
+        config {
+          id: rowId
+        }
         groups {
           nodes {
             groupId: rowId
@@ -182,6 +185,7 @@ export namespace ConfigQuery {
       };
     };
     workflow: {
+      config: { id: string };
       groups: {
         nodes: {
           groupId: string;
