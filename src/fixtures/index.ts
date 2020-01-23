@@ -39,6 +39,7 @@ export namespace fixtures {
     };
     export const type: TraceLinkType = 'OWNED';
     export const ownerId = '563';
+    export const configId = '666';
     export const groupId = '877';
     export const actionKey = 'action zou';
     export const lastFormId = '325';
@@ -48,6 +49,7 @@ export namespace fixtures {
     export const createdById = '195587';
     export const metadata: TraceLinkMetaData = {
       ownerId,
+      configId,
       groupId,
       formId: actionKey,
       lastFormId,
@@ -108,6 +110,7 @@ export namespace fixtures {
         }
       },
       workflow: {
+        config: { id: '666' },
         groups: {
           nodes: [{ accountId: '123', groupId: '887' }]
         }
