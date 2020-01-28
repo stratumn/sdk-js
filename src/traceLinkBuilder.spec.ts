@@ -12,6 +12,7 @@ describe('TraceLinkBuilder', () => {
   type Example = fixtures.traceLink.Example;
   const {
     workflowId,
+    configId,
     traceId,
     data,
     hashedData,
@@ -28,7 +29,7 @@ describe('TraceLinkBuilder', () => {
 
   beforeEach(() => {
     mockUuid.mockReturnValue(traceId as any);
-    builder = new TraceLinkBuilder({ workflowId })
+    builder = new TraceLinkBuilder({ workflowId, configId })
       .forAttestation(actionKey, data)
       .withOwner(ownerId)
       .withGroup(groupId)
@@ -36,6 +37,7 @@ describe('TraceLinkBuilder', () => {
     parentLink = builder.build();
     builderWithParent = new TraceLinkBuilder({
       workflowId,
+      configId,
       parentLink
     });
   });

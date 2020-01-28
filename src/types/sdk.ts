@@ -21,6 +21,11 @@ export interface SdkConfig {
   workflowId: string;
 
   /**
+   * The workflow config id
+   */
+  configId: string;
+
+  /**
    * The user id
    */
   userId: string;

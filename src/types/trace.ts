@@ -31,6 +31,7 @@ export type TraceStageType =
  */
 export interface TraceLinkMetaData {
   ownerId: string;
+  configId: string;
   groupId: string;
   formId?: string;
   lastFormId?: string;
@@ -223,5 +224,6 @@ export interface TracesState<TState = any> extends PaginationResult {
  */
 export interface TraceLinkBuilderConfig {
   workflowId: string;
+  configId: string;
   parentLink?: ITraceLink;
 }

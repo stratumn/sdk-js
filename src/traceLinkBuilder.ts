@@ -35,7 +35,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
    */
   constructor(cfg: TraceLinkBuilderConfig) {
     // extract info from config
-    const { workflowId, parentLink } = cfg;
+    const { workflowId, parentLink, configId } = cfg;
 
     // trace id is either retrieved from parent link when it is provided
     // or set to a new uuid.
@@ -54,8 +54,8 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
     // may be overriden if parent link was provided
     super.withPriority(1);
 
-    // set the created at timestamp
-    this.metadata = { createdAt: new Date() };
+    // set the created at timestamp and config ID
+    this.metadata = { configId, createdAt: new Date() };
 
     // if parent link was provided set the parent hash and priority
     if (this.parentLink) {
@@ -245,6 +245,16 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
    */
   public withCreatedBy(userId: string) {
     this.metadata.createdById = userId;
+    return this;
+  }
+
+  /**
+   * To set the configId.
+   *
+   * @param configId the workflow config ID
+   */
+  public withConfigId(configId: string) {
+    this.metadata.configId = configId;
     return this;
   }
 
