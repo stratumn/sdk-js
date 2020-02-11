@@ -179,12 +179,12 @@ class NodeJsFilePathWrapper extends FileWrapper {
  * The NodeJs implementation of a FileWrapper using
  * the blob and info to represent it.
  */
-class NodeJsFileBlobWrapper extends FileWrapper {
+export class NodeJsFileBlobWrapper extends FileWrapper {
   private blob: Buffer;
   private fileInfo: FileInfo;
 
-  constructor(blob: Buffer, fileInfo: FileInfo) {
-    super(!fileInfo.key, fileInfo.key);
+  constructor(blob: Buffer, fileInfo: FileInfo, disableEncryption?: boolean) {
+    super(disableEncryption, fileInfo.key);
     this.blob = blob;
     this.fileInfo = fileInfo;
   }

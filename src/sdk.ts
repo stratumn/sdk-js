@@ -38,7 +38,7 @@ import {
   assignObjects,
   extractFileRecords
 } from './helpers';
-import { FileWrapper } from './fileWrapper';
+import { FileWrapper, NodeJsFileBlobWrapper } from './fileWrapper';
 import { Mutex } from 'async-mutex';
 import { FileRecord } from './fileRecord';
 
@@ -467,7 +467,7 @@ export class Sdk<TState = any> {
     const promises = Array.from(idToFileRecordMap.entries()).map(
       async ([id, record]) => {
         const file = await this.client.downloadFile(record);
-        return [id, FileWrapper.fromNodeJsFileBlob(file, record)] as [
+        return [id, new NodeJsFileBlobWrapper(file, record, !record.key)] as [
           string,
           FileWrapper
         ];
