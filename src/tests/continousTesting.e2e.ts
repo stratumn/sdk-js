@@ -159,4 +159,4 @@ it('continuous testing', async () => {
   );
 
   expect(searchResults.totalCount).toBeGreaterThanOrEqual(1);
-}, 30000); // set custom timeout of 30 seconds as this test can take a long time to run
+}, 90000); // set custom timeout of 90 seconds as this test can take a long time to run
