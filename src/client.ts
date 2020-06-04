@@ -450,6 +450,9 @@ export class Client {
     // handle errors explicitly
     if (err) {
       // extract the status from the error response
+      if (!err.response) {
+        throw err;
+      }
       const { status } = err.response;
 
       // if 401 and retry > 0 then we can retry
