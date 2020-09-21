@@ -9,6 +9,7 @@ import qs, { ParsedUrlQueryInput } from 'querystring';
 import bcrypt from 'bcryptjs';
 import { Mutex } from 'async-mutex';
 import { Variables, ClientError } from 'graphql-request/dist/src/types';
+import { version as sdkVersion } from '../package.json';
 import graphqlRequest from './graphqlRequest';
 import {
   Endpoints,
@@ -99,7 +100,7 @@ export class Client {
     this.userAgent = [
       `${os.platform()}/${os.release()}`,
       `Node/${process.version}`,
-      `stratumn-sdk-js/${process.env.npm_package_version}`
+      `stratumn-sdk-js/${sdkVersion}`
     ].join(' ');
   }
 
