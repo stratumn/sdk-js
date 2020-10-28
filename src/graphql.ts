@@ -155,7 +155,11 @@ export namespace ConfigQuery {
         groups {
           nodes {
             groupId: rowId
-            accountId: ownerId
+            members {
+              nodes {
+                accountId
+              }
+            }
           }
         }
       }
@@ -189,7 +193,7 @@ export namespace ConfigQuery {
       groups: {
         nodes: {
           groupId: string;
-          accountId: string;
+          members: { nodes: { accountId: string }[] };
         }[];
       };
     };

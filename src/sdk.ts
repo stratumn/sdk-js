@@ -138,9 +138,10 @@ export class Sdk<TState = any> {
       // get all the account ids I am a member of
       const myAccounts = memberOf.nodes.map(a => a.accountId);
 
-      // get all the groups that are owned by one of my accounts
+      // get all the groups I belong to
+      // i.e. where I belong to one of the account members
       const myGroups = groups.nodes.filter(g =>
-        myAccounts.includes(g.accountId)
+        g.members.nodes.some(m => myAccounts.includes(m.accountId))
       );
 
       // there must be at most one group!
@@ -153,7 +154,7 @@ export class Sdk<TState = any> {
       }
 
       // extract info from my only group
-      const [{ groupId, accountId: ownerId }] = myGroups;
+      const [{ groupId }] = myGroups;
 
       // retrieve the signing private key
       let signingPrivateKey: sig.SigningPrivateKey;
@@ -179,7 +180,6 @@ export class Sdk<TState = any> {
         userId,
         accountId,
         groupId,
-        ownerId,
         signingPrivateKey
       };
 
@@ -501,13 +501,7 @@ export class Sdk<TState = any> {
     }
 
     // extract info from config
-    const {
-      workflowId,
-      userId,
-      ownerId,
-      groupId,
-      configId
-    } = await this.getConfig();
+    const { workflowId, userId, groupId, configId } = await this.getConfig();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -520,8 +514,6 @@ export class Sdk<TState = any> {
     })
       // this is an attestation
       .forAttestation(action, dataAfterFileUpload)
-      // add owner info
-      .withOwner(ownerId)
       // add group info
       .withGroup(groupId)
       // add creator info
@@ -575,13 +567,7 @@ export class Sdk<TState = any> {
     }
 
     // extract info from config
-    const {
-      workflowId,
-      userId,
-      ownerId,
-      groupId,
-      configId
-    } = await this.getConfig();
+    const { workflowId, userId, groupId, configId } = await this.getConfig();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -596,8 +582,6 @@ export class Sdk<TState = any> {
     })
       // this is an attestation
       .forAttestation(action, dataAfterFileUpload)
-      // add owner info
-      .withOwner(ownerId)
       // add group info
       .withGroup(groupId)
       // add creator info
@@ -689,13 +673,7 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const {
-      workflowId,
-      userId,
-      ownerId,
-      groupId,
-      configId
-    } = await this.getConfig();
+    const { workflowId, userId, groupId, configId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -708,8 +686,6 @@ export class Sdk<TState = any> {
     })
       // this is to accept the transfer
       .forAcceptTransfer(data)
-      // add owner info
-      .withOwner(ownerId)
       // add group info
       .withGroup(groupId)
       // add creator info

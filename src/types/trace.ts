@@ -30,7 +30,6 @@ export type TraceStageType =
  * The link metadata
  */
 export interface TraceLinkMetaData {
-  ownerId: string;
   configId: string;
   groupId: string;
   formId?: string;
@@ -50,7 +49,6 @@ export interface ITraceLink<TLinkData = any> extends Link {
   type(): TraceLinkType;
   createdBy(): Account;
   createdAt(): Date;
-  owner(): Account;
   group(): string;
   form(): string | undefined;
   lastForm(): string | undefined;

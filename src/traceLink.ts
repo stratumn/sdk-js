@@ -98,15 +98,6 @@ export class TraceLink<TLinkData = any> extends Link
   }
 
   /**
-   * The id of the owner of the trace.
-   *
-   * @returns the owner id
-   */
-  owner() {
-    return this.metadata().ownerId;
-  }
-
-  /**
    * The id of the group under which the trace is.
    *
    * @returns the group id
