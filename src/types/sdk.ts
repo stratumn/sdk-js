@@ -41,11 +41,6 @@ export interface SdkConfig {
   groupId: string;
 
   /**
-   * The owner id
-   */
-  ownerId: string;
-
-  /**
    * The private key used for signing links
    */
   signingPrivateKey: sig.SigningPrivateKey;

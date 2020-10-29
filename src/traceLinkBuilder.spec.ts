@@ -16,7 +16,6 @@ describe('TraceLinkBuilder', () => {
     traceId,
     data,
     hashedData,
-    ownerId,
     groupId,
     actionKey,
     inputs,
@@ -31,7 +30,6 @@ describe('TraceLinkBuilder', () => {
     mockUuid.mockReturnValue(traceId as any);
     builder = new TraceLinkBuilder({ workflowId, configId })
       .forAttestation(actionKey, data)
-      .withOwner(ownerId)
       .withGroup(groupId)
       .withCreatedBy(createdById);
     parentLink = builder.build();
@@ -70,7 +68,6 @@ describe('TraceLinkBuilder', () => {
     expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
-    expect(link.owner()).toEqual(ownerId);
     expect(link.group()).toEqual(groupId);
     expect(link.inputs()).toEqual(undefined);
     expect(link.lastForm()).toEqual(undefined);
@@ -83,7 +80,6 @@ describe('TraceLinkBuilder', () => {
     expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
-    expect(link.owner()).toEqual(parentLink.owner());
     expect(link.group()).toEqual(parentLink.group());
     expect(link.inputs()).toEqual(inputs);
     expect(link.lastForm()).toEqual(parentLink.form());
@@ -96,7 +92,6 @@ describe('TraceLinkBuilder', () => {
     expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
-    expect(link.owner()).toEqual(parentLink.owner());
     expect(link.group()).toEqual(parentLink.group());
     expect(link.inputs()).toEqual(inputs);
     expect(link.lastForm()).toEqual(parentLink.form());
@@ -109,7 +104,6 @@ describe('TraceLinkBuilder', () => {
     expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
-    expect(link.owner()).toEqual(parentLink.owner());
     expect(link.group()).toEqual(parentLink.group());
     expect(link.inputs()).toEqual(undefined);
     expect(link.lastForm()).toEqual(undefined);
@@ -122,7 +116,6 @@ describe('TraceLinkBuilder', () => {
     expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
-    expect(link.owner()).toEqual(parentLink.owner());
     expect(link.group()).toEqual(parentLink.group());
     expect(link.inputs()).toEqual(undefined);
     expect(link.lastForm()).toEqual(undefined);
@@ -135,7 +128,6 @@ describe('TraceLinkBuilder', () => {
     expect(link.data()).toEqual(hashedData);
     expect(link.action()).toEqual(expectedAction);
     expect(link.type()).toEqual(expectedType);
-    expect(link.owner()).toEqual(undefined);
     expect(link.group()).toEqual(undefined);
     expect(link.inputs()).toEqual(undefined);
     expect(link.lastForm()).toEqual(undefined);

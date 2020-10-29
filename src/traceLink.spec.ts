@@ -17,7 +17,6 @@ describe('TraceLink', () => {
     data,
     hashedData,
     type,
-    ownerId,
     groupId,
     actionKey,
     lastFormId,
@@ -45,7 +44,6 @@ describe('TraceLink', () => {
     expect(tLink.metadata()).toEqual(metadata);
     expect(tLink.createdBy()).toEqual(createdById);
     expect(tLink.createdAt()).toEqual(createdAt);
-    expect(tLink.owner()).toEqual(ownerId);
     expect(tLink.group()).toEqual(groupId);
     expect(tLink.form()).toEqual(actionKey);
     expect(tLink.lastForm()).toEqual(lastFormId);
@@ -60,7 +58,6 @@ describe('TraceLink', () => {
     expect(newtLink.formData()).toEqual(data);
     expect(newtLink.createdBy()).toEqual(createdById);
     expect(newtLink.createdAt()).toEqual(createdAt);
-    expect(newtLink.owner()).toEqual(ownerId);
     expect(newtLink.group()).toEqual(groupId);
     expect(newtLink.form()).toEqual(actionKey);
   });

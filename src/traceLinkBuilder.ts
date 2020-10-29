@@ -132,8 +132,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
     data?: TLinkData
   ) {
     const parent = this.getParentLink();
-    this.withOwner(parent.owner())
-      .withGroup(parent.group())
+    this.withGroup(parent.group())
       .withHashedData(data)
       .withAction(action)
       .withProcessState(type);
@@ -173,8 +172,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
     const parent = this.getParentLink();
     const action: TraceActionType = '_CANCEL_TRANSFER_';
     const type: TraceLinkType = 'OWNED';
-    this.withOwner(parent.owner())
-      .withGroup(parent.group())
+    this.withGroup(parent.group())
       .withHashedData(data)
       .withAction(action)
       .withProcessState(type);
@@ -192,8 +190,7 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
     const parent = this.getParentLink();
     const action: TraceActionType = '_REJECT_TRANSFER_';
     const type: TraceLinkType = 'OWNED';
-    this.withOwner(parent.owner())
-      .withGroup(parent.group())
+    this.withGroup(parent.group())
       .withHashedData(data)
       .withAction(action)
       .withProcessState(type);
@@ -215,16 +212,6 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
     this.withHashedData(data)
       .withAction(action)
       .withProcessState(type);
-    return this;
-  }
-
-  /**
-   * To set the metadata ownerId.
-   *
-   * @param ownerId the owner id
-   */
-  public withOwner(ownerId: string) {
-    this.metadata.ownerId = ownerId;
     return this;
   }
 
