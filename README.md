@@ -312,6 +312,43 @@ The Sdk will return an object with the traces currently in the given stage. This
 - `totalCount`: the total number of traces in the trace,
 - `info`: a pagination object (more on this [here](#pagination)).
 
+
+### Searching for traces
+
+Traces can be searched by tag. So in order to search you must first add a tag to a trace. Tags are not unique, so multiple traces can have the same tag. Traces can also have multiple tags. 
+
+The tag trace arguments look like:
+
+- `traceId`: the id of the trace to add tags too
+- `tags`: array of tags to add to the trace
+
+```js
+await sdk.addTagsToTrace({
+  traceId: '191516ec-5f8c-4757-9061-8c7ab06cf0a0',
+  tags: ['accepted', 'todo']
+});
+```
+
+Now that there is a trace with a tag we can search for it.
+
+```js
+await sdk.searchTraces(
+  { 
+    tags: { 
+      overlaps: ['todo', 'other tag'] 
+    } 
+  },
+  {
+    first: 1
+  }
+);
+```
+
+Arguments: 
+
+- `filter`: specify an array of tags to filter on. All traces containing any one of the provided tags will be returned.
+- `paginationInfo`: pagination arguments, in case there are multiple traces with the provided tags. More info at [pagination](#pagination)  
+
 ### Pagination
 
 When a method returns an array of elements (traces, links, etc..), it will be paginated. It means that you can provide arguments to specify how many elements to retrieve from which point in the full list. The pagination arguments will always look like:
