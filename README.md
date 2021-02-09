@@ -2,7 +2,7 @@
 
 The official Stratumn SDK for JavaScript to interact with [Trace](https://trace.stratumn.com), available for Node.js backends.
 
-## :satellite: Installing
+## 📡 Installing
 
 ### In Node.js
 
@@ -14,7 +14,7 @@ into a terminal window:
 yarn add @stratumn/sdk
 ```
 
-## :rocket: Usage and Getting Started
+## 🚀 Usage and Getting Started
 
 ### Configuration
 
@@ -135,91 +135,6 @@ The Sdk will return the new state object of the trace. The shape of this object 
 Notes:
 
 - The `data` object argument must be valid against the JSON schema of the form you are using, otherwise Trace will throw a validation error.
-
-### Requesting the transfer of ownership of a trace
-
-You can "push" the trace to another group in the workflow this way:
-
-```js
-await sdk.pushTrace({
-  prevLink, // or traceId
-  recipient: YOUR_CONFIG.otherGroup,
-  data: {
-    why: 'because'
-  }
-});
-```
-
-The arguments are:
-
-- `recipient`: the id of the group to push the trace to,
-- `data`: (optional) some data related to the push transfer,
-- `prevLink` or `traceId`.
-
-You can also "pull" an existing trace from another group:
-
-```js
-await sdk.pullTrace({
-  prevLink, // or traceId
-  data: {
-    why: 'because'
-  }
-});
-```
-
-And in this case, the arguments are:
-
-- `data`: (optional) some data related to the pull transfer,
-- `prevLink` or `traceId`.
-
-The Sdk will return the new state object of the trace. The shape of this object is the same as explained [previously](#creating-a-new-trace).
-
-Notes:
-
-- In both cases, the trace is not transferred automatically to or from the group. The recipient must respond to your request as we will see in the [next section](#responding-to-a-transfer-of-ownership-of-a-trace).
-- You don't need to provide a `recipient` in the case of a `pullTransfer` since the two parties of the transfer can be inferred (you and the current owner of the trace).
-- The `data` object argument is optional. When it is provided, it is a free form object that will not be validated against a JSON schema.
-
-### Responding to a transfer of ownership of a trace
-
-When someone pushed a trace to your group, you can either accept or reject the transfer:
-
-```js
-await sdk.acceptTransfer({
-  prevLink // or traceId
-});
-```
-
-Or:
-
-```js
-await sdk.rejectTransfer({
-  prevLink, // or traceId
-  data: {
-    reason: 'no way!'
-  }
-});
-```
-
-Alternatively, if you have initiated the transfer (push or pull), you can also before it has been accepted:
-
-```js
-await sdk.cancelTransfer({
-  prevLink // or traceId
-});
-```
-
-In all cases, the arguments are:
-
-- `data`: (optional) some data related to the pull transfer,
-- `prevLink` or `traceId`.
-
-The Sdk will return the new state object of the trace. The shape of this object is the same as explained [previously](#creating-a-new-trace).
-
-Notes:
-
-- The `data` object argument is optional. When it is provided, it is a free form object that will not be validated against a JSON schema.
-
 ### Trace stages
 
 Your group in the workflow is composed of multiple stages. There are always 3 default stages:
@@ -404,7 +319,7 @@ do {
 } while (results.info.hasNext);
 ```
 
-### :floppy_disk: Handling files
+### 💾 Handling files
 
 When providing a `data` object in an action (via `newTrace`, `appendLink` etc.), you can embed files that will automatically be uploaded and encrypted for you. We provide two ways for embedding files, depending on the platform your app is running.
 
@@ -506,14 +421,103 @@ consume(pic.decryptedData());
 
 In this case, `certif` and `pic` are `FileWrapper` objects from which you can extract the raw decrypted data (type `Buffer`).
 
-## :loudspeaker: Getting Help
+## 📢 Getting Help
 
-## :beetle: Opening Issues
+## 🐞 Opening Issues
 
-## :handshake: Contributing
+## 🤝 Contributing
 
-## :pencil: License
+## 📝 License
 
 This SDK is distributed under the
 [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0),
 see LICENSE.txt for more information.
+
+## 💀 Deprecated
+
+The following functionality will no longer be supported in future releases.
+
+
+### Requesting the transfer of ownership of a trace
+
+You can "push" the trace to another group in the workflow this way:
+
+```js
+await sdk.pushTrace({
+  prevLink, // or traceId
+  recipient: YOUR_CONFIG.otherGroup,
+  data: {
+    why: 'because'
+  }
+});
+```
+
+The arguments are:
+
+- `recipient`: the id of the group to push the trace to,
+- `data`: (optional) some data related to the push transfer,
+- `prevLink` or `traceId`.
+
+You can also "pull" an existing trace from another group:
+
+```js
+await sdk.pullTrace({
+  prevLink, // or traceId
+  data: {
+    why: 'because'
+  }
+});
+```
+
+And in this case, the arguments are:
+
+- `data`: (optional) some data related to the pull transfer,
+- `prevLink` or `traceId`.
+
+The Sdk will return the new state object of the trace. The shape of this object is the same as explained [previously](#creating-a-new-trace).
+
+Notes:
+
+- In both cases, the trace is not transferred automatically to or from the group. The recipient must respond to your request as we will see in the [next section](#responding-to-a-transfer-of-ownership-of-a-trace).
+- You don't need to provide a `recipient` in the case of a `pullTransfer` since the two parties of the transfer can be inferred (you and the current owner of the trace).
+- The `data` object argument is optional. When it is provided, it is a free form object that will not be validated against a JSON schema.
+
+### Responding to a transfer of ownership of a trace
+
+When someone pushed a trace to your group, you can either accept or reject the transfer:
+
+```js
+await sdk.acceptTransfer({
+  prevLink // or traceId
+});
+```
+
+Or:
+
+```js
+await sdk.rejectTransfer({
+  prevLink, // or traceId
+  data: {
+    reason: 'no way!'
+  }
+});
+```
+
+Alternatively, if you have initiated the transfer (push or pull), you can also before it has been accepted:
+
+```js
+await sdk.cancelTransfer({
+  prevLink // or traceId
+});
+```
+
+In all cases, the arguments are:
+
+- `data`: (optional) some data related to the pull transfer,
+- `prevLink` or `traceId`.
+
+The Sdk will return the new state object of the trace. The shape of this object is the same as explained [previously](#creating-a-new-trace).
+
+Notes:
+
+- The `data` object argument is optional. When it is provided, it is a free form object that will not be validated against a JSON schema.
