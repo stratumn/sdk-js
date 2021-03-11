@@ -6,6 +6,7 @@ import { Client } from './client';
 import { fixtures } from './fixtures';
 import { FetchOptions } from './types';
 import graphqlRequest from './graphqlRequest';
+import { version as sdkVersion } from '../package.json'
 
 const fetchError = new Error('fetch error');
 const salt = bcrypt.genSaltSync();
@@ -62,7 +63,7 @@ describe('Client', () => {
           headers: {
             Authorization: '',
             'content-type': 'application/json',
-            'user-agent': expect.any(String)
+            'user-agent': expect.stringContaining(sdkVersion)
           }
         }
       );
@@ -73,7 +74,7 @@ describe('Client', () => {
           headers: {
             Authorization: '',
             'content-type': 'application/json',
-            'user-agent': expect.any(String)
+            'user-agent': expect.stringContaining(sdkVersion)
           },
           body: JSON.stringify({ email, passwordHash }),
           method: 'POST'
@@ -98,7 +99,7 @@ describe('Client', () => {
           headers: {
             Authorization: expect.stringMatching(/Bearer .*/),
             'content-type': 'application/json',
-            'user-agent': expect.any(String)
+            'user-agent': expect.stringContaining(sdkVersion)
           }
         }
       );
@@ -522,7 +523,7 @@ describe('Client', () => {
             'content-type': expect.stringContaining(
               'multipart/form-data; boundary='
             ),
-            'user-agent': expect.any(String)
+            'user-agent': expect.stringContaining(sdkVersion)
           },
           body: expect.any(Object)
         }
@@ -572,7 +573,7 @@ describe('Client', () => {
           headers: {
             Authorization: 'Bearer valid',
             'content-type': 'application/json',
-            'user-agent': expect.any(String)
+            'user-agent': expect.stringContaining(sdkVersion)
           }
         }
       );
