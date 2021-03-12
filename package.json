@@ -16,7 +16,7 @@
     "prebuild": "yarn clean && yarn generate",
     "build": "tsc",
     "build:watch": "tsc -w",
-    "test": "jest --watch --runInBand",
+    "test:unit": "jest --testPathIgnorePatterns='<rootDir>/src/tests/' --watch --runInBand",
     "test:ci": "jest --coverage",
     "lint": "tslint --project \"./tsconfig.json\"",
     "release": "semantic-release",

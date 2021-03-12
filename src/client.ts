@@ -9,7 +9,6 @@ import qs, { ParsedUrlQueryInput } from 'querystring';
 import bcrypt from 'bcryptjs';
 import { Mutex } from 'async-mutex';
 import { Variables, ClientError } from 'graphql-request/dist/src/types';
-import { version as sdkVersion } from '../package.json';
 import graphqlRequest from './graphqlRequest';
 import {
   Endpoints,
@@ -28,6 +27,9 @@ import {
 import { makeEndpoints, makeAuthPayload } from './helpers';
 import { FileWrapper } from './fileWrapper';
 import HttpError from './httpError';
+
+// If we import the package.json it will change the output of the build
+const { version: sdkVersion } = require('../package.json');
 
 /**
  * The default fetch options:
