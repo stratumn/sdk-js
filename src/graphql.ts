@@ -131,23 +131,29 @@ export namespace Fragments {
 export namespace ConfigQuery {
   export const document = gql`
     query configQuery($workflowId: BigInt!) {
-      account: me {
-        userId: rowId
-        accountId
-        account {
-          signingKey {
-            privateKey {
-              passwordProtected
-              decrypted
+      account: myAccount {
+        accountId: rowId
+        signingKey {
+              privateKey {
+                passwordProtected
+                decrypted
+              }
+            }
+        bot {
+          teams {
+            nodes {
+              accountId
             }
           }
         }
-        memberOf {
-          nodes {
-            accountId: rowId
+        user {
+          memberOf {
+            nodes {
+              accountId: rowId
+            }
           }
         }
-      }
+      }  
       workflow: workflowByRowId(rowId: $workflowId) {
         config {
           id: rowId
@@ -172,21 +178,27 @@ export namespace ConfigQuery {
 
   export interface Response {
     account: {
-      userId: string;
       accountId: string;
-      account: {
-        signingKey: {
-          privateKey: {
-            decrypted: string;
-            passwordProtected: boolean;
-          };
+      signingKey: {
+        privateKey: {
+          decrypted: string;
+          passwordProtected: boolean;
         };
-      };
-      memberOf: {
-        nodes: {
-          accountId: string;
-        }[];
-      };
+      } | null;
+      bot: {
+        teams: {
+          nodes: {
+            accountId: string;
+          }[];
+        }
+      } | null;
+      user: {
+        memberOf: {
+          nodes: {
+            accountId: string;
+          }[];
+        };
+      } | null;
     };
     workflow: {
       config: { id: string };

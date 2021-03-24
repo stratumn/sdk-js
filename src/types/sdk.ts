@@ -26,11 +26,6 @@ export interface SdkConfig {
   configId: string;
 
   /**
-   * The user id
-   */
-  userId: string;
-
-  /**
    * The account id
    */
   accountId: string;

@@ -35,7 +35,7 @@ export interface TraceLinkMetaData {
   formId?: string;
   lastFormId?: string;
   createdAt: Date;
-  createdById: string;
+  createdByAccountId: string;
   inputs?: string[];
 }
 /**
