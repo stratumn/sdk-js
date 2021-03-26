@@ -124,7 +124,7 @@ export class Sdk<TState = any> {
         workflow
       } = rsp;
 
-      if (!workflow || !workflow.groups) {
+      if (!workflow?.groups) {
         throw new Error(`Cannot find workflow ${workflowId}`);
       }
 
@@ -783,6 +783,10 @@ export class Sdk<TState = any> {
       GetTraceStateQuery.document,
       { traceId }
     );
+
+    if (!rsp?.trace) {
+      throw new Error(`Cannot find trace ${traceId}`);
+    }
 
     // build and return the TraceState object
     return this.makeTraceState(rsp.trace);

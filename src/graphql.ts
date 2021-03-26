@@ -134,11 +134,11 @@ export namespace ConfigQuery {
       account: myAccount {
         accountId: rowId
         signingKey {
-              privateKey {
-                passwordProtected
-                decrypted
-              }
-            }
+          privateKey {
+            passwordProtected
+            decrypted
+          }
+        }
         bot {
           teams {
             nodes {
@@ -153,7 +153,7 @@ export namespace ConfigQuery {
             }
           }
         }
-      }  
+      }
       workflow: workflowByRowId(rowId: $workflowId) {
         config {
           id: rowId
@@ -190,7 +190,7 @@ export namespace ConfigQuery {
           nodes: {
             accountId: string;
           }[];
-        }
+        };
       } | null;
       user: {
         memberOf: {

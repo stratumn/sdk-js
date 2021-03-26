@@ -45,7 +45,7 @@ export namespace fixtures {
     export const inputs = ['47'];
     export const action: TraceActionType = '_ATTESTATION_';
     export const createdAt = new Date('2019-06-26T10:13:43.873Z');
-    export const createdById = '195587';
+    export const createdByAccountId = '195587';
     export const metadata: TraceLinkMetaData = {
       configId,
       groupId,
@@ -53,7 +53,7 @@ export namespace fixtures {
       lastFormId,
       inputs,
       createdAt,
-      createdById
+      createdByAccountId
     };
   }
 
@@ -93,19 +93,19 @@ export namespace fixtures {
     export const workflowId = traceLink.workflowId;
     export const configQueryRsp: ConfigQuery.Response = {
       account: {
-        userId: '117',
         accountId: '225',
-        memberOf: {
-          nodes: [{ accountId: '123' }]
-        },
-        account: {
-          signingKey: {
-            privateKey: {
-              decrypted: signingKey.pemPrivateKey,
-              passwordProtected: false
-            }
+        user: {
+          memberOf: {
+            nodes: [{ accountId: '123' }]
           }
-        }
+        },
+        signingKey: {
+          privateKey: {
+            decrypted: signingKey.pemPrivateKey,
+            passwordProtected: false
+          }
+        },
+        bot: null
       },
       workflow: {
         config: { id: '666' },
