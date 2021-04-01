@@ -22,7 +22,7 @@ describe('TraceLink', () => {
     lastFormId,
     inputs,
     createdAt,
-    createdById,
+    createdByAccountId,
     metadata
   } = fixtures.traceLink;
   beforeAll(() => {
@@ -42,7 +42,7 @@ describe('TraceLink', () => {
     expect(tLink.workflowId()).toEqual(workflowId);
     expect(tLink.type()).toEqual(type);
     expect(tLink.metadata()).toEqual(metadata);
-    expect(tLink.createdBy()).toEqual(createdById);
+    expect(tLink.createdBy()).toEqual(createdByAccountId);
     expect(tLink.createdAt()).toEqual(createdAt);
     expect(tLink.group()).toEqual(groupId);
     expect(tLink.form()).toEqual(actionKey);
@@ -56,7 +56,7 @@ describe('TraceLink', () => {
     // check some props
     expect(newtLink.data()).toEqual(hashedData);
     expect(newtLink.formData()).toEqual(data);
-    expect(newtLink.createdBy()).toEqual(createdById);
+    expect(newtLink.createdBy()).toEqual(createdByAccountId);
     expect(newtLink.createdAt()).toEqual(createdAt);
     expect(newtLink.group()).toEqual(groupId);
     expect(newtLink.form()).toEqual(actionKey);

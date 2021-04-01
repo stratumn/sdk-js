@@ -116,17 +116,15 @@ export class Sdk<TState = any> {
       // extract relevant info from the response
       const {
         account: {
-          userId,
           accountId,
-          memberOf,
-          account: {
-            signingKey: { privateKey }
-          }
+          signingKey,
+          user,
+          bot
         },
         workflow
       } = rsp;
 
-      if (!workflow || !workflow.groups) {
+      if (!workflow?.groups) {
         throw new Error(`Cannot find workflow ${workflowId}`);
       }
 
@@ -136,12 +134,12 @@ export class Sdk<TState = any> {
       } = workflow;
 
       // get all the account ids I am a member of
-      const myAccounts = memberOf.nodes.map(a => a.accountId);
+      const myAccounts = (user?.memberOf || bot?.teams)?.nodes.map(a => a.accountId);
 
       // get all the groups I belong to
       // i.e. where I belong to one of the account members
       const myGroups = groups.nodes.filter(g =>
-        g.members.nodes.some(m => myAccounts.includes(m.accountId))
+        g.members.nodes.some(m => myAccounts?.includes(m.accountId))
       );
 
       // there must be at most one group!
@@ -163,11 +161,11 @@ export class Sdk<TState = any> {
         signingPrivateKey = new sig.SigningPrivateKey({
           pemPrivateKey: this.opts.secret.privateKey
         });
-      } else if (!privateKey.passwordProtected) {
+      } else if (!signingKey?.privateKey.passwordProtected) {
         // otherwise use the key from the response
         // if it's not password protected!
         signingPrivateKey = new sig.SigningPrivateKey({
-          pemPrivateKey: privateKey.decrypted
+          pemPrivateKey: signingKey?.privateKey.decrypted
         });
       } else {
         throw new Error('Cannot get signing private key');
@@ -177,10 +175,9 @@ export class Sdk<TState = any> {
       this.config = {
         configId,
         workflowId,
-        userId,
         accountId,
         groupId,
-        signingPrivateKey
+        signingPrivateKey,
       };
 
       // in case no error were thrown, release here
@@ -501,7 +498,7 @@ export class Sdk<TState = any> {
     }
 
     // extract info from config
-    const { workflowId, userId, groupId, configId } = await this.getConfig();
+    const { workflowId, accountId, groupId, configId } = await this.getConfig();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -517,7 +514,7 @@ export class Sdk<TState = any> {
       // add group info
       .withGroup(groupId)
       // add creator info
-      .withCreatedBy(userId);
+      .withCreatedBy(accountId);
 
     // call createLink helper
     return this.createLink(linkBuilder);
@@ -567,7 +564,7 @@ export class Sdk<TState = any> {
     }
 
     // extract info from config
-    const { workflowId, userId, groupId, configId } = await this.getConfig();
+    const { workflowId, accountId, groupId, configId } = await this.getConfig();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -585,7 +582,7 @@ export class Sdk<TState = any> {
       // add group info
       .withGroup(groupId)
       // add creator info
-      .withCreatedBy(userId);
+      .withCreatedBy(accountId);
 
     // call createLink helper
     return this.createLink(linkBuilder);
@@ -605,7 +602,7 @@ export class Sdk<TState = any> {
     const { data, recipient } = input;
 
     // extract info from config
-    const { workflowId, userId, configId } = await this.getConfig();
+    const { workflowId, accountId, configId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -619,7 +616,7 @@ export class Sdk<TState = any> {
       // this is a push transfer
       .forPushTransfer(recipient, data)
       // add creator info
-      .withCreatedBy(userId);
+      .withCreatedBy(accountId);
 
     // call createLink helper
     return this.createLink(linkBuilder);
@@ -638,7 +635,7 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, userId, groupId, configId } = await this.getConfig();
+    const { workflowId, accountId, groupId, configId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -652,7 +649,7 @@ export class Sdk<TState = any> {
       // this is a pull transfer
       .forPullTransfer(groupId, data)
       // add creator info
-      .withCreatedBy(userId);
+      .withCreatedBy(accountId);
 
     // call createLink helper
     return this.createLink(linkBuilder);
@@ -673,7 +670,7 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, userId, groupId, configId } = await this.getConfig();
+    const { workflowId, accountId, groupId, configId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -689,7 +686,7 @@ export class Sdk<TState = any> {
       // add group info
       .withGroup(groupId)
       // add creator info
-      .withCreatedBy(userId);
+      .withCreatedBy(accountId);
 
     // call createLink helper
     return this.createLink(linkBuilder);
@@ -711,7 +708,7 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, userId, configId } = await this.getConfig();
+    const { workflowId, accountId, configId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -725,7 +722,7 @@ export class Sdk<TState = any> {
       // this is to reject the transfer
       .forRejectTransfer(data)
       // add creator info
-      .withCreatedBy(userId);
+      .withCreatedBy(accountId);
 
     // call createLink helper
     return this.createLink(linkBuilder);
@@ -747,7 +744,7 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, userId, configId } = await this.getConfig();
+    const { workflowId, accountId, configId } = await this.getConfig();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -761,7 +758,7 @@ export class Sdk<TState = any> {
       // this is to cancel the transfer
       .forCancelTransfer(data)
       // add creator info
-      .withCreatedBy(userId);
+      .withCreatedBy(accountId);
 
     // call createLink helper
     return this.createLink(linkBuilder);
@@ -786,6 +783,10 @@ export class Sdk<TState = any> {
       GetTraceStateQuery.document,
       { traceId }
     );
+
+    if (!rsp?.trace) {
+      throw new Error(`Cannot find trace ${traceId}`);
+    }
 
     // build and return the TraceState object
     return this.makeTraceState(rsp.trace);

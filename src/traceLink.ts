@@ -80,12 +80,12 @@ export class TraceLink<TLinkData = any> extends Link
   }
 
   /**
-   * The id of the user who created the link.
+   * The id of the account who created the link.
    *
-   * @returns the user id
+   * @returns the account id
    */
   createdBy() {
-    return this.metadata().createdById;
+    return this.metadata().createdByAccountId;
   }
 
   /**

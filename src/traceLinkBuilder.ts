@@ -226,12 +226,12 @@ export class TraceLinkBuilder<TLinkData = any> extends LinkBuilder {
   }
 
   /**
-   * To set the metadata createdById.
+   * To set the metadata createdByAccountId.
    *
-   * @param userId the user id
+   * @param accountId the account id
    */
-  public withCreatedBy(userId: string) {
-    this.metadata.createdById = userId;
+  public withCreatedBy(accountId: string) {
+    this.metadata.createdByAccountId = accountId;
     return this;
   }
 

@@ -19,7 +19,7 @@ describe('TraceLinkBuilder', () => {
     groupId,
     actionKey,
     inputs,
-    createdById
+    createdByAccountId
   } = fixtures.traceLink;
 
   let builder: TraceLinkBuilder<Example>;
@@ -31,7 +31,7 @@ describe('TraceLinkBuilder', () => {
     builder = new TraceLinkBuilder({ workflowId, configId })
       .forAttestation(actionKey, data)
       .withGroup(groupId)
-      .withCreatedBy(createdById);
+      .withCreatedBy(createdByAccountId);
     parentLink = builder.build();
     builderWithParent = new TraceLinkBuilder({
       workflowId,

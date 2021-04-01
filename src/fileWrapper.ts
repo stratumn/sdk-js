@@ -63,11 +63,11 @@ export abstract class FileWrapper implements Identifiable {
    * as in the NodeJs case, the info is retrieved
    * asynchronously using the statAsync function.
    */
-  abstract async info(): Promise<FileInfo>;
+  abstract info(): Promise<FileInfo>;
 
-  abstract async encryptedData(): Promise<Buffer>;
+  abstract encryptedData(): Promise<Buffer>;
 
-  abstract async decryptedData(): Promise<Buffer>;
+  abstract decryptedData(): Promise<Buffer>;
 
   /**
    * Creates a FileWrapper from a browser file representation.
