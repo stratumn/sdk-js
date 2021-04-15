@@ -166,7 +166,7 @@ export interface PaginationResult {
  * of a workflow.
  */
 export interface SearchTracesFilter {
-  tags: { overlaps: string[] };
+  tags: { overlaps: string[] } | { contains: string[] };
 }
 
 /**

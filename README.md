@@ -135,6 +135,7 @@ The Sdk will return the new state object of the trace. The shape of this object 
 Notes:
 
 - The `data` object argument must be valid against the JSON schema of the form you are using, otherwise Trace will throw a validation error.
+
 ### Trace stages
 
 Your group in the workflow is composed of multiple stages. There are always 3 default stages:
@@ -227,10 +228,9 @@ The Sdk will return an object with the traces currently in the given stage. This
 - `totalCount`: the total number of traces in the trace,
 - `info`: a pagination object (more on this [here](#pagination)).
 
-
 ### Searching for traces
 
-Traces can be searched by tag. So in order to search you must first add a tag to a trace. Tags are not unique, so multiple traces can have the same tag. Traces can also have multiple tags. 
+Traces can be searched by tag. So in order to search you must first add a tag to a trace. Tags are not unique, so multiple traces can have the same tag. Traces can also have multiple tags.
 
 The tag trace arguments look like:
 
@@ -246,12 +246,14 @@ await sdk.addTagsToTrace({
 
 Now that there is a trace with a tag we can search for it.
 
+In order to search for any of the tags provided, use the `overlaps` parameter :
+
 ```js
 await sdk.searchTraces(
-  { 
-    tags: { 
-      overlaps: ['todo', 'other tag'] 
-    } 
+  {
+    tags: {
+      overlaps: ['todo', 'other tag']
+    }
   },
   {
     first: 1
@@ -259,10 +261,25 @@ await sdk.searchTraces(
 );
 ```
 
-Arguments: 
+If you want to search for all tags provided, use the `contains` parameter : :
+
+```js
+await sdk.searchTraces(
+  {
+    tags: {
+      contains: ['todo', 'other tag']
+    }
+  },
+  {
+    first: 1
+  }
+);
+```
+
+Arguments:
 
 - `filter`: specify an array of tags to filter on. All traces containing any one of the provided tags will be returned.
-- `paginationInfo`: pagination arguments, in case there are multiple traces with the provided tags. More info at [pagination](#pagination)  
+- `paginationInfo`: pagination arguments, in case there are multiple traces with the provided tags. More info at [pagination](#pagination)
 
 ### Pagination
 
@@ -436,7 +453,6 @@ see LICENSE.txt for more information.
 ## 💀 Deprecated
 
 The following functionality will no longer be supported in future releases.
-
 
 ### Requesting the transfer of ownership of a trace
 
