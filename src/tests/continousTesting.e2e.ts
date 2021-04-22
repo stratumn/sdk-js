@@ -52,13 +52,13 @@ it('continuous testing', async () => {
     workflowId,
     endpoints,
     secret: { privateKey: bot1Key },
-    groupLabel: group1Label ? group1Label : null
+    groupLabel: group1Label
   });
   const sdkBot2 = new Sdk({
     workflowId,
     endpoints,
     secret: { email: bot2Email, password: bot2Password },
-    groupLabel: group2Label ? group2Label : null
+    groupLabel: group2Label
   });
 
   const numRequests = 3;
