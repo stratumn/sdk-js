@@ -9,3 +9,4 @@ lib
 .env.test
 
 coverage
+.vscode/settings.json

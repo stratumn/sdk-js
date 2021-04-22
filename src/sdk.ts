@@ -30,7 +30,7 @@ import {
   SearchTracesQuery
 } from './graphql';
 import { Client } from './client';
-import {SdkConfig} from './sdkConfig';
+import { SdkConfig } from './sdkConfig';
 import { TraceLinkBuilder } from './traceLinkBuilder';
 import { fromObject, TraceLink } from './traceLink';
 import {
@@ -95,83 +95,83 @@ export class Sdk<TState = any> {
 
     try {
       // if the config already exists use it!
-    if (!this.config || forceUpdate) {
+      if (!this.config || forceUpdate) {
 
-      // extract the workflow id from the options
-      const { workflowId } = this.opts;
+        // extract the workflow id from the options
+        const { workflowId } = this.opts;
 
-      // shortcut types
-      type Response = ConfigQuery.Response;
-      type Variables = ConfigQuery.Variables;
+        // shortcut types
+        type Response = ConfigQuery.Response;
+        type Variables = ConfigQuery.Variables;
 
-      // run the GraphQL ConfigQuery
-      const rsp = await this.client.graphql<Response, Variables>(
-        ConfigQuery.document,
-        { workflowId }
-      );
+        // run the GraphQL ConfigQuery
+        const rsp = await this.client.graphql<Response, Variables>(
+          ConfigQuery.document,
+          { workflowId }
+        );
 
-      // extract relevant info from the response
-      const {
-        account: {
+        // extract relevant info from the response
+        const {
+          account: {
+            accountId,
+            signingKey,
+            user,
+            bot
+          },
+          workflow
+        } = rsp;
+
+        if (!workflow?.groups) {
+          throw new Error(`Cannot find workflow ${workflowId}`);
+        }
+
+        const {
+          groups,
+          config: { id: configId }
+        } = workflow;
+
+        // get all the account ids I am a member of
+        const myAccounts = (user?.memberOf || bot?.teams)?.nodes.map(a => a.accountId);
+
+        // get all the groups I belong to
+        // i.e. where I belong to one of the account members
+        const myGroups = groups.nodes.filter(g =>
+          g.members.nodes.some(m => myAccounts?.includes(m.accountId))
+        );
+        const groupLabelToIdMap: Record<string, string> = {};
+        myGroups.forEach(g => groupLabelToIdMap[g.label] = g.groupId);
+
+        // there must be at least one group!
+        if (myGroups.length === 0) {
+          throw new Error('No group to choose from.');
+        }
+
+        // retrieve the signing private key
+        let signingPrivateKey: sig.SigningPrivateKey;
+        if (isPrivateKeySecret(this.opts.secret)) {
+          // if the secret is a PrivateKeySecret, use it!
+          signingPrivateKey = new sig.SigningPrivateKey({
+            pemPrivateKey: this.opts.secret.privateKey
+          });
+        } else if (!signingKey?.privateKey.passwordProtected) {
+          // otherwise use the key from the response
+          // if it's not password protected!
+          signingPrivateKey = new sig.SigningPrivateKey({
+            pemPrivateKey: signingKey?.privateKey.decrypted
+          });
+        } else {
+          throw new Error('Cannot get signing private key');
+        }
+
+        // store the new config
+        this.config = new SdkConfig(
+          workflowId,
+          configId,
           accountId,
-          signingKey,
-          user,
-          bot
-        },
-        workflow
-      } = rsp;
-
-      if (!workflow?.groups) {
-        throw new Error(`Cannot find workflow ${workflowId}`);
+          groupLabelToIdMap,
+          signingPrivateKey,
+        );
       }
-
-      const {
-        groups,
-        config: { id: configId }
-      } = workflow;
-
-      // get all the account ids I am a member of
-      const myAccounts = (user?.memberOf || bot?.teams)?.nodes.map(a => a.accountId);
-
-      // get all the groups I belong to
-      // i.e. where I belong to one of the account members
-      const myGroups = groups.nodes.filter(g =>
-        g.members.nodes.some(m => myAccounts?.includes(m.accountId))
-      );
-      let groupLabelToIdMap: Record<string, string> = {};
-      myGroups.forEach(g => groupLabelToIdMap[g.label] = g.groupId);
-
-      // there must be at least one group!
-      if (myGroups.length === 0) {
-        throw new Error('No group to choose from.');
-      }
-
-      // retrieve the signing private key
-      let signingPrivateKey: sig.SigningPrivateKey;
-      if (isPrivateKeySecret(this.opts.secret)) {
-        // if the secret is a PrivateKeySecret, use it!
-        signingPrivateKey = new sig.SigningPrivateKey({
-          pemPrivateKey: this.opts.secret.privateKey
-        });
-      } else if (!signingKey?.privateKey.passwordProtected) {
-        // otherwise use the key from the response
-        // if it's not password protected!
-        signingPrivateKey = new sig.SigningPrivateKey({
-          pemPrivateKey: signingKey?.privateKey.decrypted
-        });
-      } else {
-        throw new Error('Cannot get signing private key');
-      }
-
-      // store the new config
-      this.config = new SdkConfig(
-        workflowId,
-        configId,
-        accountId,
-        groupLabelToIdMap,
-        signingPrivateKey,
-      );
-    }
       // in case no error were thrown, release here
       release();
 

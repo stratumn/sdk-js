@@ -47,7 +47,8 @@ export class SdkConfig implements ISdkConfig {
             resultGroupId = this.groupLabelToIdMap[this.groupLabel];
           } else {
             throw new Error(
-              'Multiple groups to select from, please specify the group label you wish to perform the action with.'
+              'Multiple groups to select from, please specify' +
+                'the group label you wish to perform the action with.'
             );
           }
         }
