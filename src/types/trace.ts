@@ -64,6 +64,7 @@ export interface NewTraceInput<TLinkData = any> {
   actionKey?: string;
   formId?: string;
   data: TLinkData;
+  groupLabel?: string;
 }
 
 /**
@@ -79,6 +80,7 @@ export interface AppendLinkInput<TLinkData = any> {
   formId?: string;
   data: TLinkData;
   prevLink?: ITraceLink;
+  groupLabel?: string;
 }
 
 /**
@@ -128,6 +130,7 @@ export interface TransferResponseInput<TLinkData = any> {
   traceId?: string;
   data?: TLinkData;
   prevLink?: ITraceLink;
+  groupLabel?: string;
 }
 
 /**
@@ -196,6 +199,7 @@ export interface TraceState<TState = any, TLinkData = any> {
   headLink: ITraceLink<TLinkData>;
   updatedAt: Date;
   updatedBy: Account;
+  updatedByGroupId: string;
   data: TState;
   tags: string[];
 }

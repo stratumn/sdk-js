@@ -40,6 +40,7 @@ export namespace fixtures {
     export const type: TraceLinkType = 'OWNED';
     export const configId = '666';
     export const groupId = '877';
+    export const groupLabel = '877';
     export const actionKey = 'action zou';
     export const lastFormId = '325';
     export const inputs = ['47'];
@@ -113,6 +114,7 @@ export namespace fixtures {
           nodes: [
             {
               groupId: '887',
+              label: 'Group label',
               members: { nodes: [{ accountId: '123' }] }
             }
           ]
@@ -127,7 +129,8 @@ export namespace fixtures {
           trace: {
             head: {
               data: variables.data,
-              raw: variables.link
+              raw: variables.link,
+              groupId: variables.groupId
             },
             state: {
               data: {}

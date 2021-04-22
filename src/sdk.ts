@@ -1,7 +1,6 @@
 import { sig } from '@stratumn/js-crypto';
 import {
   SdkOptions,
-  SdkConfig,
   NewTraceInput,
   isPrivateKeySecret,
   AppendLinkInput,
@@ -31,6 +30,7 @@ import {
   SearchTracesQuery
 } from './graphql';
 import { Client } from './client';
+import {SdkConfig} from './sdkConfig';
 import { TraceLinkBuilder } from './traceLinkBuilder';
 import { fromObject, TraceLink } from './traceLink';
 import {
@@ -95,10 +95,7 @@ export class Sdk<TState = any> {
 
     try {
       // if the config already exists use it!
-      if (this.config && !forceUpdate) {
-        release();
-        return this.config;
-      }
+    if (!this.config || forceUpdate) {
 
       // extract the workflow id from the options
       const { workflowId } = this.opts;
@@ -141,18 +138,13 @@ export class Sdk<TState = any> {
       const myGroups = groups.nodes.filter(g =>
         g.members.nodes.some(m => myAccounts?.includes(m.accountId))
       );
+      let groupLabelToIdMap: Record<string, string> = {};
+      myGroups.forEach(g => groupLabelToIdMap[g.label] = g.groupId);
 
-      // there must be at most one group!
-      if (myGroups.length > 1) {
-        throw new Error('More than one group to choose from.');
-      }
       // there must be at least one group!
       if (myGroups.length === 0) {
         throw new Error('No group to choose from.');
       }
-
-      // extract info from my only group
-      const [{ groupId }] = myGroups;
 
       // retrieve the signing private key
       let signingPrivateKey: sig.SigningPrivateKey;
@@ -172,14 +164,14 @@ export class Sdk<TState = any> {
       }
 
       // store the new config
-      this.config = {
-        configId,
+      this.config = new SdkConfig(
         workflowId,
+        configId,
         accountId,
-        groupId,
+        groupLabelToIdMap,
         signingPrivateKey,
-      };
-
+      );
+    }
       // in case no error were thrown, release here
       release();
 
@@ -210,6 +202,7 @@ export class Sdk<TState = any> {
       headLink,
       updatedAt: new Date(trace.updatedAt),
       updatedBy: headLink.createdBy(),
+      updatedByGroupId: headLink.group(),
       data: trace.state.data,
       tags: trace.tags || []
     };
@@ -247,7 +240,7 @@ export class Sdk<TState = any> {
         // the graphql document
         CreateLinkMutation.document,
         // export the link as object
-        { link: link.toObject({ bytes: String }), data: link.formData() }
+        { link: link.toObject({ bytes: String }), data: link.formData(), groupId: link.group() }
       );
 
       // build and return the TraceState object
@@ -337,7 +330,8 @@ export class Sdk<TState = any> {
       );
     }
     // extract info from config
-    const { groupId } = await this.getConfig();
+    const config = await this.getConfig();
+    const groupId = config.groupId();
 
     // shortcut types
     type Response = GetTracesInStageQuery.Response;
@@ -498,7 +492,9 @@ export class Sdk<TState = any> {
     }
 
     // extract info from config
-    const { workflowId, accountId, groupId, configId } = await this.getConfig();
+    const config = await this.getConfig();
+    const { workflowId, accountId, configId } = config;
+    const groupId = config.groupId();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -564,7 +560,9 @@ export class Sdk<TState = any> {
     }
 
     // extract info from config
-    const { workflowId, accountId, groupId, configId } = await this.getConfig();
+    const config = await this.getConfig();
+    const { workflowId, accountId, configId } = config;
+    const groupId = config.groupId();
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -635,7 +633,9 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, accountId, groupId, configId } = await this.getConfig();
+    const config = await this.getConfig();
+    const { workflowId, accountId, configId } = config;
+    const groupId = config.groupId();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -670,7 +670,9 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, accountId, groupId, configId } = await this.getConfig();
+    const config = await this.getConfig();
+    const { workflowId, accountId, configId } = config;
+    const groupId = config.groupId();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({

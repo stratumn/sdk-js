@@ -23,7 +23,9 @@ const [
   bot2Email,
   bot2Password,
   formRequestId,
-  formResponseId
+  formResponseId,
+  group1Label,
+  group2Label
 ] = [
   'TRACE_API_URL',
   'ACCOUNT_API_URL',
@@ -34,7 +36,9 @@ const [
   'BOT_2_EMAIL',
   'BOT_2_PASSWORD',
   'FORM_REQUEST_ID',
-  'FORM_RESPONSE_ID'
+  'FORM_RESPONSE_ID',
+  'GROUP_1_LABEL',
+  'GROUP_2_LABEL'
 ].map(getEnvVariable);
 
 const endpoints = {
@@ -47,12 +51,14 @@ it('continuous testing', async () => {
   const sdkBot1 = new Sdk({
     workflowId,
     endpoints,
-    secret: { privateKey: bot1Key }
+    secret: { privateKey: bot1Key },
+    groupLabel: group1Label ? group1Label : null
   });
   const sdkBot2 = new Sdk({
     workflowId,
     endpoints,
-    secret: { email: bot2Email, password: bot2Password }
+    secret: { email: bot2Email, password: bot2Password },
+    groupLabel: group2Label ? group2Label : null
   });
 
   const numRequests = 3;
