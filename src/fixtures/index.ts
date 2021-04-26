@@ -39,8 +39,9 @@ export namespace fixtures {
     };
     export const type: TraceLinkType = 'OWNED';
     export const configId = '666';
+    export const acoountId = '123';
     export const groupId = '877';
-    export const groupLabel = '877';
+    export const groupLabel = 'Group test 1';
     export const actionKey = 'action zou';
     export const lastFormId = '325';
     export const inputs = ['47'];
@@ -97,7 +98,7 @@ export namespace fixtures {
         accountId: '225',
         user: {
           memberOf: {
-            nodes: [{ accountId: '123' }]
+            nodes: [{ accountId: traceLink.acoountId }]
           }
         },
         signingKey: {
@@ -113,9 +114,14 @@ export namespace fixtures {
         groups: {
           nodes: [
             {
-              groupId: '887',
-              label: 'Group label',
-              members: { nodes: [{ accountId: '123' }] }
+              groupId: traceLink.groupId,
+              label: traceLink.groupLabel,
+              members: { nodes: [{ accountId: traceLink.acoountId }] }
+            },
+            {
+              groupId: '1024',
+              label: 'Group test 2',
+              members: { nodes: [{ accountId: traceLink.acoountId }] }
             }
           ]
         }

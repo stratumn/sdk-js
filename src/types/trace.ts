@@ -130,7 +130,6 @@ export interface TransferResponseInput<TLinkData = any> {
   traceId?: string;
   data?: TLinkData;
   prevLink?: ITraceLink;
-  groupLabel?: string;
 }
 
 /**

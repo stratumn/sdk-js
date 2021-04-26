@@ -172,6 +172,11 @@ export class Sdk<TState = any> {
           signingPrivateKey,
         );
       }
+
+      if (null != this.opts.groupLabel) {
+        this.config.groupLabel = this.opts.groupLabel;
+      }
+
       // in case no error were thrown, release here
       release();
 
@@ -484,7 +489,7 @@ export class Sdk<TState = any> {
    */
   public async newTrace<TLinkData>(input: NewTraceInput<TLinkData>) {
     // extract info from input
-    const { data, actionKey, formId } = input;
+    const { data, actionKey, formId, groupLabel } = input;
 
     const action = actionKey || formId;
     if (!action) {
@@ -494,7 +499,7 @@ export class Sdk<TState = any> {
     // extract info from config
     const config = await this.getConfig();
     const { workflowId, accountId, configId } = config;
-    const groupId = config.groupId();
+    const groupId = config.groupId(groupLabel);
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -552,7 +557,7 @@ export class Sdk<TState = any> {
     const parentLink = await this.getHeadLink(input);
 
     // extract info from input
-    const { data, actionKey, formId } = input;
+    const { data, actionKey, formId, groupLabel } = input;
 
     const action = actionKey || formId;
     if (!action) {
@@ -562,7 +567,7 @@ export class Sdk<TState = any> {
     // extract info from config
     const config = await this.getConfig();
     const { workflowId, accountId, configId } = config;
-    const groupId = config.groupId();
+    const groupId = config.groupId(groupLabel);
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
