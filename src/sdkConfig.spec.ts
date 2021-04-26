@@ -25,7 +25,7 @@ describe('SdkConfig', () => {
     );
   });
 
-  it('Get group Label with parameter', () => {
+  it('Get group Label without parameter', () => {
     expect(config.groupId()).toEqual(fixtures.traceLink.groupId);
 
     // size = 2
