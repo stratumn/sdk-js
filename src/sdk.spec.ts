@@ -5,6 +5,7 @@ import { mocked } from 'ts-jest/utils';
 import { Sdk } from './sdk';
 import { Client } from './client';
 import { fixtures } from './fixtures';
+import { TraceLink } from './traceLink';
 
 jest.mock('./client');
 const mockClientCtor = mocked(Client);
@@ -17,7 +18,8 @@ describe('Sdk', () => {
       secret: {
         privateKey: fixtures.signingKey.pemPrivateKey
       },
-      workflowId: fixtures.Sdk.workflowId
+      workflowId: fixtures.Sdk.workflowId,
+      groupLabel: fixtures.traceLink.groupLabel
     });
   });
 
