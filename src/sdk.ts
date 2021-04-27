@@ -1,7 +1,6 @@
 import { sig } from '@stratumn/js-crypto';
 import {
   SdkOptions,
-  SdkConfig,
   NewTraceInput,
   isPrivateKeySecret,
   AppendLinkInput,
@@ -31,6 +30,7 @@ import {
   SearchTracesQuery
 } from './graphql';
 import { Client } from './client';
+import { SdkConfig } from './sdkConfig';
 import { TraceLinkBuilder } from './traceLinkBuilder';
 import { fromObject, TraceLink } from './traceLink';
 import {
@@ -95,90 +95,87 @@ export class Sdk<TState = any> {
 
     try {
       // if the config already exists use it!
-      if (this.config && !forceUpdate) {
-        release();
-        return this.config;
-      }
+      if (!this.config || forceUpdate) {
 
-      // extract the workflow id from the options
-      const { workflowId } = this.opts;
+        // extract the workflow id from the options
+        const { workflowId } = this.opts;
 
-      // shortcut types
-      type Response = ConfigQuery.Response;
-      type Variables = ConfigQuery.Variables;
+        // shortcut types
+        type Response = ConfigQuery.Response;
+        type Variables = ConfigQuery.Variables;
 
-      // run the GraphQL ConfigQuery
-      const rsp = await this.client.graphql<Response, Variables>(
-        ConfigQuery.document,
-        { workflowId }
-      );
+        // run the GraphQL ConfigQuery
+        const rsp = await this.client.graphql<Response, Variables>(
+          ConfigQuery.document,
+          { workflowId }
+        );
 
-      // extract relevant info from the response
-      const {
-        account: {
+        // extract relevant info from the response
+        const {
+          account: {
+            accountId,
+            signingKey,
+            user,
+            bot
+          },
+          workflow
+        } = rsp;
+
+        if (!workflow?.groups) {
+          throw new Error(`Cannot find workflow ${workflowId}`);
+        }
+
+        const {
+          groups,
+          config: { id: configId }
+        } = workflow;
+
+        // get all the account ids I am a member of
+        const myAccounts = (user?.memberOf || bot?.teams)?.nodes.map(a => a.accountId);
+
+        // get all the groups I belong to
+        // i.e. where I belong to one of the account members
+        const myGroups = groups.nodes.filter(g =>
+          g.members.nodes.some(m => myAccounts?.includes(m.accountId))
+        );
+        const groupLabelToIdMap: Record<string, string> = {};
+        myGroups.forEach(g => groupLabelToIdMap[g.label] = g.groupId);
+
+        // there must be at least one group!
+        if (myGroups.length === 0) {
+          throw new Error('No group to choose from.');
+        }
+
+        // retrieve the signing private key
+        let signingPrivateKey: sig.SigningPrivateKey;
+        if (isPrivateKeySecret(this.opts.secret)) {
+          // if the secret is a PrivateKeySecret, use it!
+          signingPrivateKey = new sig.SigningPrivateKey({
+            pemPrivateKey: this.opts.secret.privateKey
+          });
+        } else if (!signingKey?.privateKey.passwordProtected) {
+          // otherwise use the key from the response
+          // if it's not password protected!
+          signingPrivateKey = new sig.SigningPrivateKey({
+            pemPrivateKey: signingKey?.privateKey.decrypted
+          });
+        } else {
+          throw new Error('Cannot get signing private key');
+        }
+
+        // store the new config
+        this.config = new SdkConfig(
+          workflowId,
+          configId,
           accountId,
-          signingKey,
-          user,
-          bot
-        },
-        workflow
-      } = rsp;
-
-      if (!workflow?.groups) {
-        throw new Error(`Cannot find workflow ${workflowId}`);
+          groupLabelToIdMap,
+          signingPrivateKey,
+        );
       }
 
-      const {
-        groups,
-        config: { id: configId }
-      } = workflow;
-
-      // get all the account ids I am a member of
-      const myAccounts = (user?.memberOf || bot?.teams)?.nodes.map(a => a.accountId);
-
-      // get all the groups I belong to
-      // i.e. where I belong to one of the account members
-      const myGroups = groups.nodes.filter(g =>
-        g.members.nodes.some(m => myAccounts?.includes(m.accountId))
-      );
-
-      // there must be at most one group!
-      if (myGroups.length > 1) {
-        throw new Error('More than one group to choose from.');
+      if (null != this.opts.groupLabel) {
+        this.config.groupLabel = this.opts.groupLabel;
       }
-      // there must be at least one group!
-      if (myGroups.length === 0) {
-        throw new Error('No group to choose from.');
-      }
-
-      // extract info from my only group
-      const [{ groupId }] = myGroups;
-
-      // retrieve the signing private key
-      let signingPrivateKey: sig.SigningPrivateKey;
-      if (isPrivateKeySecret(this.opts.secret)) {
-        // if the secret is a PrivateKeySecret, use it!
-        signingPrivateKey = new sig.SigningPrivateKey({
-          pemPrivateKey: this.opts.secret.privateKey
-        });
-      } else if (!signingKey?.privateKey.passwordProtected) {
-        // otherwise use the key from the response
-        // if it's not password protected!
-        signingPrivateKey = new sig.SigningPrivateKey({
-          pemPrivateKey: signingKey?.privateKey.decrypted
-        });
-      } else {
-        throw new Error('Cannot get signing private key');
-      }
-
-      // store the new config
-      this.config = {
-        configId,
-        workflowId,
-        accountId,
-        groupId,
-        signingPrivateKey,
-      };
 
       // in case no error were thrown, release here
       release();
@@ -210,6 +207,7 @@ export class Sdk<TState = any> {
       headLink,
       updatedAt: new Date(trace.updatedAt),
       updatedBy: headLink.createdBy(),
+      updatedByGroupId: headLink.group(),
       data: trace.state.data,
       tags: trace.tags || []
     };
@@ -247,7 +245,7 @@ export class Sdk<TState = any> {
         // the graphql document
         CreateLinkMutation.document,
         // export the link as object
-        { link: link.toObject({ bytes: String }), data: link.formData() }
+        { link: link.toObject({ bytes: String }), data: link.formData(), groupId: link.group() }
       );
 
       // build and return the TraceState object
@@ -337,7 +335,8 @@ export class Sdk<TState = any> {
       );
     }
     // extract info from config
-    const { groupId } = await this.getConfig();
+    const config = await this.getConfig();
+    const groupId = config.groupId();
 
     // shortcut types
     type Response = GetTracesInStageQuery.Response;
@@ -490,7 +489,7 @@ export class Sdk<TState = any> {
    */
   public async newTrace<TLinkData>(input: NewTraceInput<TLinkData>) {
     // extract info from input
-    const { data, actionKey, formId } = input;
+    const { data, actionKey, formId, groupLabel } = input;
 
     const action = actionKey || formId;
     if (!action) {
@@ -498,7 +497,9 @@ export class Sdk<TState = any> {
     }
 
     // extract info from config
-    const { workflowId, accountId, groupId, configId } = await this.getConfig();
+    const config = await this.getConfig();
+    const { workflowId, accountId, configId } = config;
+    const groupId = config.groupId(groupLabel);
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -556,7 +557,7 @@ export class Sdk<TState = any> {
     const parentLink = await this.getHeadLink(input);
 
     // extract info from input
-    const { data, actionKey, formId } = input;
+    const { data, actionKey, formId, groupLabel } = input;
 
     const action = actionKey || formId;
     if (!action) {
@@ -564,7 +565,9 @@ export class Sdk<TState = any> {
     }
 
     // extract info from config
-    const { workflowId, accountId, groupId, configId } = await this.getConfig();
+    const config = await this.getConfig();
+    const { workflowId, accountId, configId } = config;
+    const groupId = config.groupId(groupLabel);
 
     // upload files and transform data
     const dataAfterFileUpload = await this.uploadFilesInLinkData(data);
@@ -635,7 +638,9 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, accountId, groupId, configId } = await this.getConfig();
+    const config = await this.getConfig();
+    const { workflowId, accountId, configId } = config;
+    const groupId = config.groupId();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({
@@ -670,7 +675,9 @@ export class Sdk<TState = any> {
     const { data } = input;
 
     // extract info from config
-    const { workflowId, accountId, groupId, configId } = await this.getConfig();
+    const config = await this.getConfig();
+    const { workflowId, accountId, configId } = config;
+    const groupId = config.groupId();
 
     // use a TraceLinkBuilder to create the next link
     const linkBuilder = new TraceLinkBuilder<TLinkData>({

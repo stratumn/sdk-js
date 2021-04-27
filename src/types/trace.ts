@@ -64,6 +64,7 @@ export interface NewTraceInput<TLinkData = any> {
   actionKey?: string;
   formId?: string;
   data: TLinkData;
+  groupLabel?: string;
 }
 
 /**
@@ -79,6 +80,7 @@ export interface AppendLinkInput<TLinkData = any> {
   formId?: string;
   data: TLinkData;
   prevLink?: ITraceLink;
+  groupLabel?: string;
 }
 
 /**
@@ -166,7 +168,7 @@ export interface PaginationResult {
  * of a workflow.
  */
 export interface SearchTracesFilter {
-  tags: { overlaps: string[] };
+  tags: { overlaps: string[] } | { contains: string[] };
 }
 
 /**
@@ -196,6 +198,7 @@ export interface TraceState<TState = any, TLinkData = any> {
   headLink: ITraceLink<TLinkData>;
   updatedAt: Date;
   updatedBy: Account;
+  updatedByGroupId: string;
   data: TState;
   tags: string[];
 }

@@ -15,6 +15,7 @@ export namespace Fragments {
         head {
           raw
           data
+          groupId
         }
       }
     `;
@@ -23,6 +24,7 @@ export namespace Fragments {
       head: {
         raw: any;
         data?: any;
+        groupId: string;
       };
     }
   }
@@ -40,6 +42,7 @@ export namespace Fragments {
         head {
           raw
           data
+          groupId
         }
         tags
         # TODO: temporary, remove once state computation
@@ -61,6 +64,7 @@ export namespace Fragments {
       head: {
         raw: any;
         data?: any;
+        groupId: string;
       };
       tags?: string[];
     }
@@ -161,6 +165,7 @@ export namespace ConfigQuery {
         groups {
           nodes {
             groupId: rowId
+            label
             members {
               nodes {
                 accountId
@@ -205,6 +210,7 @@ export namespace ConfigQuery {
       groups: {
         nodes: {
           groupId: string;
+          label: string;
           members: { nodes: { accountId: string }[] };
         }[];
       };
@@ -231,6 +237,7 @@ export namespace CreateLinkMutation {
   export interface Variables {
     link: any;
     data?: any;
+    groupId: string;
   }
 
   export interface Response {
