@@ -14,3 +14,6 @@ updates:
     open-pull-requests-limit: 0
     # Disable rebasing for npm pull requests
     rebase-strategy: "disabled"
+    commit-message:
+      # Add prefix for semantic-release
+      prefix: "Upgrade: "
