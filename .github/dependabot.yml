@@ -1,0 +1,16 @@
+version: 2
+updates:
+
+  # Maintain dependencies for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    reviewers:
+      - "haroldcb"
+    assignees:
+      - "haroldcb"
+    # Disable version updates for npm dependencies
+    open-pull-requests-limit: 0
+    # Disable rebasing for npm pull requests
+    rebase-strategy: "disabled"
