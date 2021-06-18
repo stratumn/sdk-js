@@ -11,15 +11,17 @@ export class FileRecord implements MediaRecord, FileInfo, Identifiable {
   mimetype: string;
   size: number;
   key?: string;
+  createdAt: Date;
 
   constructor(media: MediaRecord, info: FileInfo) {
     const { digest, name } = media;
-    const { mimetype, size, key } = info;
+    const { mimetype, size, key, createdAt } = info;
     this.digest = digest;
     this.name = name;
     this.mimetype = mimetype;
     this.size = size;
     this.key = key;
+    this.createdAt = createdAt ? createdAt : new Date();
   }
 
   /**
@@ -50,7 +52,8 @@ export class FileRecord implements MediaRecord, FileInfo, Identifiable {
         obj.digest !== undefined &&
         obj.name !== undefined &&
         obj.mimetype !== undefined &&
-        obj.size !== undefined)
+        obj.size !== undefined &&
+        obj.createdAt !== undefined)
     );
   }
 }

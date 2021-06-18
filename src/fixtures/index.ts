@@ -63,7 +63,8 @@ export namespace fixtures {
     digest: 'abc123',
     mimetype: 'text/plain',
     name: 'data.txt',
-    size: 123
+    size: 123,
+    createdAt: new Date()
   };
 
   export namespace FileWrappers {
