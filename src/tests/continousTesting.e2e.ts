@@ -132,14 +132,16 @@ it('continuous testing', async () => {
       key: expect.any(String),
       mimetype: 'image/png',
       name: 'stratumn.png',
-      size: expect.any(Number)
+      size: expect.any(Number),
+      createdAt: expect.any(String)
     },
     {
       digest: expect.any(String),
       key: expect.any(String),
       mimetype: 'txt',
       name: 'novel.txt',
-      size: expect.any(Number)
+      size: expect.any(Number),
+      createdAt: expect.any(String)
     }
   ]);
 
