@@ -52,13 +52,13 @@ it('sdk testing', async () => {
   const sdkBot1 = new Sdk({
     workflowId,
     endpoints,
-    secret: { privateKey: bot1Key },
+    secret: { privateKey: bot1Key.replace(/\n/g, '\n') },
     groupLabel: MY_GROUP_LABEL
   });
   const sdkBot2 = new Sdk({
     workflowId,
     endpoints,
-    secret: { privateKey: bot2Key },
+    secret: { privateKey: bot2Key.replace(/\n/g, '\n') },
     groupLabel: OTHER_GROUP_LABEL
   });
 
