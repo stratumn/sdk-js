@@ -537,3 +537,10 @@ The Sdk will return the new state object of the trace. The shape of this object 
 Notes:
 
 - The `data` object argument is optional. When it is provided, it is a free form object that will not be validated against a JSON schema.
+
+## Test locally
+
+If you want to run the e2e tests locally :
+
+- for `sdkTesting.e2e.ts` : you will have to create a `.env.test` file at the root, and get the content of the `SDK Tests - .env - staging` file on 1Password.
+- for `continousTesting.e2e.ts` : you will have to create a `.env.test` file at the root, and get the content of the file `SDK Old Test - .env - staging` on 1Password.JS.
