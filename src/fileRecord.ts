@@ -21,7 +21,7 @@ export class FileRecord implements MediaRecord, FileInfo, Identifiable {
     this.mimetype = mimetype;
     this.size = size;
     this.key = key;
-    this.createdAt = createdAt ? createdAt : new Date();
+    this.createdAt = createdAt || new Date();
   }
 
   /**
