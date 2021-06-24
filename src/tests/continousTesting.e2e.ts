@@ -30,15 +30,15 @@ const [
   'TRACE_API_URL',
   'ACCOUNT_API_URL',
   'MEDIA_API_URL',
-  'WORKFLOW_ID',
-  'BOT_1_KEY',
-  'TEAM_B_ID',
-  'BOT_2_EMAIL',
-  'BOT_2_PASSWORD',
-  'FORM_REQUEST_ID',
-  'FORM_RESPONSE_ID',
-  'GROUP_1_LABEL',
-  'GROUP_2_LABEL'
+  'OLD_WORKFLOW_ID',
+  'OLD_BOT_1_KEY',
+  'OLD_TEAM_B_ID',
+  'OLD_BOT_2_EMAIL',
+  'OLD_BOT_2_PASSWORD',
+  'OLD_FORM_REQUEST_ID',
+  'OLD_FORM_RESPONSE_ID',
+  'OLD_GROUP_1_LABEL',
+  'OLD_GROUP_2_LABEL'
 ].map(getEnvVariable);
 
 const endpoints = {
@@ -132,14 +132,16 @@ it('continuous testing', async () => {
       key: expect.any(String),
       mimetype: 'image/png',
       name: 'stratumn.png',
-      size: expect.any(Number)
+      size: expect.any(Number),
+      createdAt: expect.any(String)
     },
     {
       digest: expect.any(String),
       key: expect.any(String),
       mimetype: 'txt',
       name: 'novel.txt',
-      size: expect.any(Number)
+      size: expect.any(Number),
+      createdAt: expect.any(String)
     }
   ]);
 

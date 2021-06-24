@@ -6,6 +6,7 @@ export interface FileInfo {
   size: number;
   name: string;
   key?: string;
+  createdAt?: Date;
 }
 
 /**
